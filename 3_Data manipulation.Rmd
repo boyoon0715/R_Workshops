@@ -1,0 +1,389 @@
+---
+title: "Import, View, and Manipulate Data in R"
+author: "Boyoon Lee"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+    df_print: paged
+  html_notebook:
+    theme: cerulean
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+***
+In this document, you will learn how to prepare data using R. We start from setting a working directory, then learn how to install packages. We also look at how to import, view, manipulate, and Export data. 
+
+
+# Before Loading Data
+
+## Set the Working Directory
+Before loading data and start playing with it, you need to tell R where to find the data in your computer, i.e., the directory or the path. So before we go in further, let's first see how can we set and change the working directory. 
+
+To set a directory, you use the ```setwd()``` function.  
+```{r}
+#view your current working directory
+getwd()
+
+#change the working directory to your project folder
+setwd("/Users/username/RWork")
+```
+```{r}
+#view what is inside this working directory
+dir()
+```
+
+***A note about directory/filenames in Windows:** In the Windows system, path names use backslashes, e.g. ```C:\Users\username\RWork\```. R, on the other hand, inherits its file and folder naming conventions from Unix which uses forward slashes instead: ```C:/Users/username/RWork/```.
+
+
+## Install packages
+A package bundles together code, data, documentation, and tests, and is easy to share with others. In R's CRAN (Comprehensive R Archive Network), there are huge variety of packages available for you to use. This is one of the reasons that R is so successful: the chances are that someone has already solved a problem that you’re working on, and you can benefit from their work by downloading their package.
+
+ To use those packages, you first need to install them. You only need to do this once. To install a package ```pkgName```, simply type ```install.packages("pkgName")``` into the console.
+```{r}
+install.packages("dplyr")
+```
+
+To use functions in the package, we first have to load the package: ```library(pkgName)```. If the package has not been installed yet, we will get an error. Otherwise, functions in the package are now available for use.
+```{r}
+library(dplyr)
+```
+
+
+
+
+# Import Data 
+
+## Packages needed for different data formats
+You can import all kinds of data format in R using various packages.
+
+
+File Type | Package | Function
+:----------|:----------|:-------------
+Excel (.xlsx)| openslxs | read.xlsx
+Stata (.dta, versions 12 and earlier) | foreign | read.dta
+Stata (.dta, versions 13 and 14) | readstata13 |read.dta13
+SPSS (.sav) | foreign | read.spss
+Comma separated (.csv) | none | read.csv
+Tab delimited (.tab or .txt) | none | read.table
+R data files (.Rdata) | none | load
+
+```{r}
+#Install necessary packages, you only need to do this once
+install.packages("openxlsx")
+install.packages("foreign")
+install.packages("readstata13")
+```
+
+## Load packages and import data
+
+Although you only need to install packages to R once, you need to load the required packages in R using the ```library()``` function before you analysis every time in the beginning of your R session.  
+
+
+**1.Read Excel file** 
+```{r}
+#You need to library() a package before using it in R. 
+library(openxlsx) 
+
+#If your data is in the current working directory, you can simply do:
+data <- read.xlsx("filename.xlsx")
+
+# If your data is not in the current working directory, you need to give R the path to the data, such as 
+data <- read.xlsx("/Users/username/RWork/filename.xlsx") # do not run
+```
+
+**2.Read a comma-seperated (.csv) file**
+```{r}
+# If your data is in the current working directory, you can simply do:
+ANES <- read.csv("cleaned_ANES.csv")
+# If your data is not in the current working directory, you need to give the path to the data, such as
+ANES <- read.csv("/Users/username/RWork/cleaned_ANES.csv")
+```
+
+**3.Read a R data (.Rdata) file**
+```{r}
+load("filename.Rdata")
+```
+
+**4.Read a Stata (.dta, versions 12 and earlier) file**
+```{r}
+library(foreign)
+data<-read.dta("filename.dta")
+```
+
+**5.Read a Stata (.dta, versions 13 and 14) file**
+
+The ``foreign'' pack does not support stata data after version 12. We can use "readstat13" to import from the later versions of stata instead.
+```{r}
+library(readstata13)
+# Read from stata version 13&14
+data<-read.dta13("filename.dta")
+```
+
+**6.Read .sav (SPSS) file**
+```{r}
+library(foreign)
+data <- read.spss("filename.sav", to.data.frame = TRUE)
+```
+
+**7. Read a Tab deliminted (.tab or .txt) file**
+```{r}
+data <- read.table("JoP_R_data.txt",sep="\t")
+```
+
+## Some useful arguments within read function
+In some cases, you need to specify additional information of the data in the data importing function to be able to load the data in R in addition to the path and file name. You can get information about the arguments and their default in the R documents using the ```help()``` function. 
+
+```{r}
+#Practice and review what arguments are there inside different data import functions
+?read.csv
+?read.xlsx
+?read.spss
+```
+
+### Header
+
+The header argument tells R whether to treat the first row of the data as the variable names. In the examples above, you probably have noticed that the default header argument in read.table is FALSE, while the default header argument in read.csv is TRUE. It means that by default, ```read.table()``` function will not treat the top row of the data as the variable name. If the first row of your data is the variable name, you'd want to change the default from FALSE to TRUE:
+
+```{r}
+# If the first row of your data contains the variable names, you need to specify the header argument to TRUE in read.table. You do not need to specify the header to TRUE in read.csv, as it is the default in read.csv.
+read.table(file, header = TRUE)
+# If the first row of your csv data is not the variable names, you need to change the default of header in read.csv to FALSE
+read.csv(file, header = FALSE)
+```
+
+
+### sep
+
+The ```sep``` argument tell R how to separate the values in the raw data. The default of read.table is sep="", which tells R to separate values on one or more white spaces. For example, under this default, ``Penn State'' will be treated as two values, and will be put into two columns in a data frame. 
+
+If your data is not white space separated, you need to change this default accordingly. In the "Penn State" example, the "Penn State" might be one variable, and should be put into one column instead of two. In this case, the data is not separated by white space, but tabs. If your data is tab separated, you need to change the ```sep``` argument to $"\t"$:
+
+```{r}
+read.table(file, sep="\t")
+```
+
+If your data is comma separated, the sep argument should be "," which is the default in ```read.csv()```. 
+
+### to.data.frame in read.spss
+
+When you read a SPSS data into R, the ```read.spss()``` function does not change the format of the data as a data frame. However, as most of our analyses are on a data frame, you'd want to change this default when you read a SPSS file:
+
+```{r}
+read.spss(file, to.data.frame = TRUE)
+```
+
+
+## Get existing data
+There are multiple ways you can get data into R. First, there are data included in packages. Second, you can find datasets online and introduce a resource with a lot of links to political datasets. Third, you can load data from GitHub repositories. 
+
+### Using data from data packages
+A lot of packages include dataset. For example, the package ```poliscidata``` provide General Social Survey, American National Election Survey, and States dataset.
+```{r}
+install.packages("poliscidata")
+library(poliscidata)
+```
+
+### Using specific packages to load data
+
+Some data are directly downloadable to R using specific packages. For example, to get data from the General Social Survey, you can use the ```gssr``` package (Kieran healy, 2019). This package is not on CRAN, so we need to use the ```devtools``` package to install it and then use ```library()``` to load it. The easiest way to get the GSS data is to simply ask to get all of the data in an object called ```gss_all``` with ```data()```. This loads 6108 variables contained in the cumulative GSS data. 
+```{r}
+devtools::install_github("kjhealy/gssr")
+library("gssr")
+data(gss_all)
+```
+There are several other functions that might be help conditional upon what you would like to study. Accordingly, we recommend that you consult https://kjhealy.github.io/gssr/ for various examples on how to access the data and the documentation of different variables.
+
+Similarly, you can obtain the American National Election Study data, using the package ```anesr```(Martherus, 2019). This package is also not available on CRAN for now, so we need to use ```install_github()``` function from the ```devtools``` pakcage. After that, we can lod the package.
+```{r}
+devtools::install_github("jamesmartherus/anesr")
+library("anesr")
+```
+To see all the datasets available via the package, simply type the following:
+```{r}
+data(package="anesr")
+```
+If you run the above code, you will see that there is a dataset called ```timeseries_2020```. To access to this data, use the ```data()``` function. This returns an object called timeseries_2020 with 8280 observations and 1381 variables. For further information, see https://github.com/jamesmartherus/anesr.
+```{r}
+data(timeseries_2020)
+```
+As you may see from the data set, you there are too many variables that may not be of your interests. Also, the names of variables are not informative at all -- they are marked as a combination of "V" and some numbers. So before using any publicly available data, I encourage you to check the documentations for data sets and use only variable they you need. 
+
+### Load data from GitHub repositories
+A lot of data today is available in GitHub repositories. To get data from GitHub, we can first set the file path (click on ‘Raw’ to get to the raw dataset) and the use ```read.csv()``` function. 
+
+```{r}
+urlfile<-'https://raw.githubusercontent.com/erikgahner/polls/master/polls.csv'
+polls<-read.csv(url(urlfile))
+```
+
+
+# View data
+
+In addition to the ```View()``` function, there are many other useful functions for getting information on your data.
+
+## View some basic features 
+
+```{r}
+# list all the objects in your current working environment
+ls()
+# list the variable names
+names(ANES)
+```
+```{r}
+# dimension of your data
+dim(ANES)
+```
+```{r}
+# view the first 2 rows in the data
+head(ANES,n=2)
+# view the last 2 rows in the data
+tail(ANES,n=2)
+```
+```{r}
+# class of an object
+class(ANES)
+class(ANES$NPR)
+# view summary statistics of a variable
+summary(ANES$NPR)
+```
+## Subset data 
+
+```{r}
+# hand pick rows and columns of a data
+ANES[c(1,2),c(2,3)] # first two rows and second and third column
+# exclude certain rows and columns
+ANES[-1, -c(1,2,3)] # exclude the first row and first three columns 
+# select more than one variables
+ANES[c("NPR","rush","hannity")]
+# select based on the values of observations
+ANES[which(ANES$NPR==1),]
+# select based on multiple critieria
+ANES[which(ANES$Dem.Pres.cand.FT >=20 & ANES$GOP.Pres.cand.FT >= 20),] # select the respondents whose feeling thermometer scores towards Clinton AND Trump are BOTH bigger or equal to 20 
+ANES[which(ANES$Dem.Pres.cand.FT >=20 | ANES$GOP.Pres.cand.FT >= 20),] # select the respondents whose feeling thermometer score towards Clinton OR Trump is bigger or equal to 20 
+# subset use the subset function
+subset(ANES, ANES$Dem.Pres.cand.FT >=20 | ANES$GOP.Pres.cand.FT >= 20) 
+```
+
+## Sort data
+
+You can sort your data on one or more variables, and you can set the order to be ascending or descending
+
+```{r}
+# the order function returns a permutation which rearranges its first argument into ascending or descending order. The default is ascending. 
+order(ANES$Dem.Pres.cand.FT)
+# change into descending order using the decreasing argument inside order()
+order(ANES$Dem.Pres.cand.FT, decreasing = TRUE)
+# Sort the turnout data based on the ascending order of ANES 
+ordered.ANES <- ANES[order(ANES$Dem.Pres.cand.FT,decreasing = TRUE),]
+# Note after ordering, the NAs will always be at the end no matter whether the order is ascending or descending
+```
+
+
+# Manipulate data
+
+The data sets you have been using here (ANES) have already been cleaned. They are in the correct formats and contains everything you need for the class analysis. However, in reality when you use other people's data or download data online, you might need to use several variables in the data to calculate the variable you are interested in, and you might need to correct the class of a variable, and you might need to recode the values in the data. 
+
+## Create new variables
+
+Some times, you need to use multiple variables in a date set to create a variable of your interest. Instead of calculating the value every time when you need to use the variable, it is more convenient to create such variable first and add the new variable to the data set. 
+
+```{r}
+# Add a new variable Diff.FT to the ANES data frame
+ANES$Diff.FT <- ANES$GOP.Pres.cand.FT - ANES$Dem.Pres.cand.FT
+head(ANES$Diff.FT,5)
+```
+
+## Recode values
+
+### Change the class 
+
+A data set generally contains variables with different class/characteristics, such as numeric, character, factor and logical. When analyzing the data, sometimes you need to convert the class of the variable.
+
+```{r}
+# check whether the variable is certain class
+is.numeric()
+is.character()
+is.factor()
+# convert to the correct class for the analysis
+as.numeric()
+as.character()
+as.factor()
+```
+
+### Change the value
+
+When doing analysis, we often need to recode some of the values. For example, in survey data, the gender might be coded as "female" or "male" and we want to recode it as 0 and 1. We can use the recode function from the package car.
+
+First, install and load the package Car:
+```{r}
+# Install the car package, you only need to instal once
+install.packages("car")
+
+# Load the car package
+library(car)
+```
+
+Second, try the recode function!
+
+* Change all the 1 into "female" and all the 0 into "male" in the female variable in ANES data
+
+```{r}
+table(ANES$female)
+```
+```{r}
+ANES$female <- recode(ANES$female, "1 = 'female';0 = 'male'")
+table(ANES$female)
+```
+
+* Change a range of data into certain value: recode the feeling thermometer scores less than 25 into 1 (meaning "very negative"), 25 to 49 into 2 (meaning "somewhat negative"), 50 to 74 into 3 (meaning "somewhat positive"), and 75 to 100 into 4 (meaning "very positive")
+
+```{r}
+table(ANES$Dem.Pres.cand.FT)
+```
+```{r}
+ANES$Dem.Pres.cand.FT <- recode(ANES$Dem.Pres.cand.FT, "0:24=1; 25:49=2;50:74=3;75:100=4;else=NA")
+table(ANES$Dem.Pres.cand.FT)
+```
+
+* After recoding the value, always double check the recoded variable
+
+```{r}
+table(ANES$female)
+summary(ANES$Dem.Pres.cand.FT)
+```
+
+Sometimes, you might only want to change one specific cell. For example, you find the value for a NA cell. You can recode that cell by locating its row.
+
+```{r}
+# For example, I find that the first missing value in the feeling thermometer towards Clinton should be 39
+ANES$Dem.Pres.cand.FT[which(is.na(ANES$Dem.Pres.cand.FT))[1]] <- 39
+```
+
+
+# Export Data
+
+Note that **the changes you made in R and R environment do not change the data in your folder**. Therefore, after recoding or adding variables, you will want to save the updated data in your computer, so you do not need to repeat the data manipulation. Using the same packages, we can save/export the data you created or worked in R to your computer as various formats. However, csv format is recommended. 
+
+## Save data as csv file
+
+```{r}
+# write the data to the current working directory
+write.csv(ANES,"updatedANES.csv")
+# write the data to other folders in your computer
+write.csv(ANES,"path/updatedANES.csv")
+```
+
+## Save data as other format
+
+```{r}
+# Excel
+write.xlsx(ANES,"updatedANES.xlsx")
+# Stata
+write.dta(ANES,"updatedANES.dta")
+```

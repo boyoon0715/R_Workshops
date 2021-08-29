@@ -1,0 +1,261 @@
+---
+title: "Data Structures in R"
+author: "Boyoon Lee"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+    df_print: paged
+  html_notebook:
+    theme: cerulean
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+---
+
+***
+There are different data structures in R. In this document, I briefly explain individual types. If you need more details, you can find them in R's documentation. 
+
+R's base data structures can be thought by their dimensionality (1 dimension, 2 dimensions, or N dimensions) and whether the contents are of the same type (homogeneous) or of the different types (heterogeneous). This gives rise to the five data types most often used in data analysis:
+
+
+| Dimension |   Homogeneous  | Heterogeneous |
+| :--------| :------------ | :------------ |
+| 1d | Vector| List |
+| 2d | Matrix | Data frame |
+| Nd | Array |    |
+
+
+# Scalars and types of variables
+
+## Types of variables
+Note that R has a scalar type as well. A scalar data structure is the most basic data type that holds only a single atomic value at a time. Scalars don’t have to be numeric(often called double), they can also be different types such as characters (i.e. strings), integers, or logical values. We can check the type of a variable by using the ```typeof()``` function:
+```{r}
+typeof(1)
+```
+```{r}
+typeof("politics")
+```
+```{r}
+typeof(TRUE)
+```
+Note that having quotation marks around a number will give you a character variable, instead of a numeric variable. For example,
+```{r}
+typeof("1")
+```
+
+## Factors
+Asides from types, there is also a property called Attributes. Attributes can be thought of as a named list (with unique names), and can be accessed individually with ```attr()``` or all at once (as a list) with ```attributes()```. 
+
+One important use of attributes is to define factors. A factor is a vector that can contain only predefined values, and is used to store categorical data. Factors are built on top of integer vectors using two attributes: the ```class```, “factor”, which makes them behave differently from regular integer vectors, and the ```levels```, which defines the set of allowed values.
+
+```{r}
+x <- factor(c("a", "b", "b", "a"))
+x
+class(x)
+levels(x)
+```
+
+
+## Coercion
+We can change the type of a variable to type ```x``` using the function ```as.x```. This process is called “coercion”. For example, the following code changes the number 65 to the string "65":
+```{r}
+as.character(65)
+```
+```{r}
+typeof(65)
+```
+```{r}
+typeof(as.character(65))
+```
+Similarly, you can coerce one type to another by using ```as.character()```, ```as.double()```, ```as.integer()```, or ```as.logical()```.
+
+
+
+# Vectors
+The basic data structure in R is the vector, a 1-dimensional array whose entries are the same type. 
+
+## Creation
+The following code produces a vector containing the numbers 1, 3, 5, 7, and 9:
+```{r}
+vec <- c(1,3,5,7,9)
+vec
+```
+We don't have to type out all the numbers. The following code assigns a vector of the numbers from 1 to 100 to ```vec```:
+```{r}
+vec <- 1:100
+vec
+```
+What if I only want even numbers from 1 to 100 (inclusive)? We can manipulate vectors using arithmetic operations (just like numbers). Note that arithmetic operations happen element-wise.
+```{r}
+even <- 1:50 * 2
+even
+```
+Or we can use ```seq()``` function:
+```{r}
+even <- seq(2,100,2) # seq(start number, end number, by)
+even
+```
+We can also use ```c()``` function to combine ("concatenate") several small vectors into one large vector.
+```{r}
+z <- 1:5
+z <- c(z,3,z)
+z
+```
+
+## Checking
+We can check if a variable is of type ```vector```, using ```is.vector()``` or ```is.atomic()```. Other types of variables can be also checked using  ```is.character()```, ```is.double()```, ```is.integer()```, and ```is.logical()```.
+```{r}
+is.vector(vec)
+```
+```{r}
+is.atomic(vec)
+```
+Use the ```length()``` function to figure out how many elements there are in a vector. 
+```{r}
+odd <-seq(1,99,2)
+```
+
+## Extracing elements
+We can get multiple elements of a vector as well. The following code extracts the 5th to 9th even number (inclusive), and assigns it to the variable ```y```:
+```{r}
+y <- even[5:9]
+y
+```
+This extracts just the 3rd and 5th even numbers:
+```{r}
+even[c(3,5)]
+```
+We can also erase certain numbers using negative indexing. Let's say I want all even numbers except the first two:
+```{r}
+even[-c(1,2)]
+```
+
+
+# Matrices and Arrays
+Matrices are just the 2-dimensional analogs of vectors while arrays are the n-dimensional analogs of vectors. As with vectors, elements of matrices and arrays have to be of the same type. Matrices are used commonly as part of the mathematical machinery of statistics. Arrays are much rarer, but worth being aware of.
+
+## Creation
+Matrices and arrays are created with ```matrix()``` and ```array()```, or by using the assignment form of ```dim()```:
+```{r}
+a <- matrix(1:6, ncol = 3, nrow = 2)
+a
+```
+```{r}
+b <- array(1:12, c(2, 3, 2))
+b
+```
+```{r}
+c <- 1:6
+dim(c) <- c(2, 3)
+c
+```
+Notice that R takes the elements in the vector you give it and fills in the matrix column by column. If we want the elements to be filled in by row instead, we have to put in a byrow = TRUE argument:
+```{r}
+A <- matrix(1:6, nrow = 2, byrow=TRUE)
+A
+```
+## Checking
+To get the dimensions of the matrix, we can use the ```dim()```, ```nrow()``` and ```ncol()``` functions.
+```{r}
+length(a)
+nrow(a)
+ncol(a)
+```
+You can change the names of row and column as well.
+```{r}
+rownames(a)<-c("A","B")
+colnames(a)<-c("a","b","c")
+a
+```
+## Extracting elements
+To access the element in the ```i```th row and ```j```column for the matrix ```A```, use the index ```i,j```:
+```{r}
+A[1,2]
+```
+```{r}
+A[1,]
+A[,1]
+```
+
+# Lists
+In all the data structures so far, the elements have to be of the same type. 
+
+## Creation
+To have elements on different types in one data structure, we can use a list, which we create with ```list()```. We can think of a list as a collection of key-value pairs. Keys should be strings.
+```{r}
+event <- list(year = "2021", month = "Aug")
+event
+```
+The ```str()``` function can be used to inspect what is inside person:
+```{r}
+str(event)
+```
+To access the ```year``` element person, we have 2 options:
+```{r}
+event[["year"]]
+# or
+event$year
+```
+## Checking
+The elements of a list can be anything, even another data structure! Let’s add the Saturdays in August:
+```{r}
+event$saturday <- c(7,4,21,28)
+str(event)
+```
+To see the keys associated with a list, use the ```names()``` function:
+```{r}
+names(event)
+```
+
+# Data frames
+A data frame is the most common way of storing data in R, and if used systematically makes data analysis easier. Under the hood, a data frame is a list of equal-length vectors. This makes it a 2-dimensional structure, so it shares properties of both the matrix and the list. This means that a data frame has ```names()```, ```colnames()```, and ```rownames()```, although ```names()``` and ```colnames()``` are the same thing. The ```length()``` of a data frame is the length of the underlying list and so is the same as ```ncol()```; ```nrow()``` gives the number of rows.
+
+You can subset a data frame like a 1d structure (where it behaves like a list), or a 2d structure (where it behaves like a matrix). We will talk about subsetting later when we cover how to manipulate data in R. 
+
+## Creation
+```{r}
+df <- data.frame(x = 1:3, y = c("a", "b", "c"))
+str(df)
+```
+### Checking
+To check if an object is a data frame, use ```class()``` or test explicitly with ```is.data.frame()```:
+```{r}
+class(df)
+is.data.frame(df)
+```
+You can check the names of rows and columns.
+```{r}
+colnames(df)
+rownames(df)
+```
+You can also check the numbers of rows and columns.
+```{r}
+ncol(df)
+nrow(df)
+```
+
+
+### Coercion
+You can coerce an object to a data frame with ```as.data.frame()```:
+
+* A vector will create a one-column data frame.
+* A list will create one column for each element; it’s an error if they’re not all the same length.
+* A matrix will create a data frame with the same number of columns and rows as the matrix.
+```{r}
+vec<-c(1:5)
+vec<-as.data.frame(vec)
+str(vec)
+```
+```{r}
+list<-list(1:2, 1:3, 1:4)
+list<-as.data.frame(list)
+```
+```{r}
+matrix<-a
+matrix<-as.data.frame(matrix)
+str(matrix)
+```
+
+

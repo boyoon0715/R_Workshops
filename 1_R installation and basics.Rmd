@@ -1,0 +1,114 @@
+---
+title: "Getting Started with R"
+author: "Boyoon Lee"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+    df_print: paged
+  html_notebook:
+    theme: cerulean
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+---
+
+***
+To get started with R, you need to install them first. This document will show you how to download R as well as RStudio, a software application that makes R easier to use. Both R and RStudio are free and easy to download. After installation, we will talk about some basic features of RStudio. 
+
+
+
+# Downlaod and Install R and RStudio
+
+## How to download and install R
+R is maintained by an international team of developers who make the language available through the web page of The Comprehensive R Archive Network. To download R, please do the followings:
+
+1. Open an internet browser and go to https://cran.r-project.org/
+2. Follow the link that describes your operating system: Windows, Mac, or Linux.
+   + Windows: Click “Download R for Windows” > “base”  > "Download R 4.1.1 for Windows"
+   + Mac: Click “Download R for Mac” > "R-4.1.1.pkg"
+3. The link downloads an installer program, which installs the most up-to-date version of R for Windows. Run this program and step through the installation wizard that appears. The wizard will install R into your program files folders and place a shortcut in your Start menu. Note that you will need to have all of the appropriate administration privileges to install new software on your machine. If your computer requires a password before installing new programs, you will need it here. The installer lets you customize your installation, but the defaults will be suitable for most users. 
+
+## How to download and install Rstudio
+RStudio is an application that helps you write in R, making it easier to use R. You can download RStudio for free at https://www.rstudio.com/products/rstudio/download/#download. Just click the “Download RStudio” button and follow the simple instructions that follow. Once you have installed RStudio, you can open it like any other program on your computer—usually by clicking an icon on your desktop.
+
+* Even if you use RStudio, you will still need to download R to your computer. RStudio helps you use the version of R that lives on your computer, but it does not come with a version of R on its own.
+
+
+
+# Open and Use RStudio
+
+## Structure of RStudio
+To open RStudio, you can double-click on the Rstudio icon in the Applications. A window titled "Rstudio" should pop up, looking something like this:
+[<img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Structure_of_Rstudio.jpeg">](https://upload.wikimedia.org/wikipedia/commons/3/39/Structure_of_Rstudio.jpeg)
+  * Source: Wikimedia Commons
+
+**1. Top-left:** This space presents scripts you are working with. To add a new script, click the ![](C:/Users/joerh/OneDrive/Pictures/script.png) icon in the top-left corner of the window, and click “R Script”. You can type in commands here -- it does not run the commands unless you execute code. To excute code from this window, highlight the code by dragging your mouse and click ![](C:/Users/joerh/OneDrive/Pictures/run.png) icon at the top of the window. You can also use a short-cut using your keyboard: press Cmd+Enter on a Mac, Ctrl+Enter on Windows.
+
+**2. Top-right:** This is project windows showing Environment and History. 
+
+* Environment: List of objects that we have created or have access to. We can also see the list of objects using the command ``` ls()```.
+* History: List of commands that we have entered into the console.
+
+**3. Bottom-left:** This is the R console, where your commands are run in an interactive fashion. Type in your command and hit the Enter key. Once you hit the Enter key, R executes your command and prints the result, if any.
+
+**4. Bottom-right:** This space is where you see files, plots, packages, and help files. 
+
+* Files: Allows you to navigate the directory structure on your computer.
+* Plots: Any graphical output you make will be displayed here.
+* Packages: List of packages that have been installed on your computer. To use a package, click the square box on the very left. To unload a package, click once again such that the check mark disappears.  
+* Help: Documentation for ```functionName``` appears here when you type ```?functionName``` in the console.
+* Viewer: For displaying local web content
+
+
+## R as a calculator
+
+You can use R has a calculator. For example,
+
+```{r}
+50+2
+```
+```{r}
+305*13
+```
+```{r}
+408/2
+```
+There are several other math functions which come with R. For example, to evaluate $log(e^{12}-2^{cos(\pi)})$, we can do the following.
+```{r}
+log(exp(12) - 2^(cos(pi)))
+```
+
+## Variable assignment 
+
+There are times we want to store the result of a computation so that we can use it later. R allows us to do this by variable assignment. When assigning variable names, they must start with a letter and can only contain letters, numbers, ```_``` and ```.```. Also, the names are case sensitive. Additionally, you can't use any of the words like ```TRUE```, ```NULL```, ```if```, and ```function```. If you try to use those, you will get an error message. It is possible that you can override this rule by using backticks such as ``` `_abc` ```, but it's better to avoid such complicated name because it will get you confused. 
+
+Here is an example code assigning ```5``` to the variable ```x```:
+```{r}
+x<-5
+```
+You can use  ```=``` sign to assign values to variable, but I would advise using ```<-``` to avoid unnecessary confusion. Also, when you assign values, no output will be printed. This is simply because the act of assigning value to a variable does not produce any output. If we want to check whether we assigned the value correctly, we simply type the variable's name into the console:
+```{r}
+x
+```
+We can also reassign ```x``` to a different value:
+```{r}
+x <- (x+3)^2
+x
+```
+We can also add other variables and define their relationships.
+```{r}
+y <- x+6
+z <- y^2 + x
+```
+
+Note that now we have ```x, y, z``` entries in our Environment tab. To remove object/variable, use the ```rm()``` function:
+```{r}
+rm(x)
+```
+To remove more than one object, separate them by commas:
+```{r}
+rm(y,z)
+```
+To remove all objects at once, type in ```rm(list = ls())``` in the console.
