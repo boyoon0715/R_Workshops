@@ -1,0 +1,196 @@
+Country,Status,PR Aggr,CL Aggr,Total Aggr
+Afghanistan,NF,10,14,24
+Albania,PF,28,40,68
+Algeria,NF,11,24,35
+Andorra,F,39,56,95
+Angola,NF,10,14,24
+Antigua and Barbuda,F,33,50,83
+Argentina,F,33,49,82
+Armenia,PF,16,29,45
+Australia,F,40,58,98
+Austria,F,37,58,95
+Azerbaijan,NF,4,10,14
+Bahamas,F,38,53,91
+Bahrain,NF,2,10,12
+Bangladesh,PF,20,27,47
+Barbados,F,40,57,97
+Belarus,NF,5,15,20
+Belgium,F,40,55,95
+Belize,F,36,51,87
+Benin,F,33,49,82
+Bhutan,PF,28,27,55
+Bolivia,PF,29,39,68
+Bosnia and Herzegovina,PF,21,34,55
+Botswana,F,28,44,72
+Brazil,F,31,48,79
+Brunei,NF,7,22,29
+Bulgaria,F,33,47,80
+Burkina Faso,PF,23,40,63
+Burundi,NF,5,14,19
+Cambodia,NF,11,20,31
+Cameroon,NF,9,15,24
+Canada,F,40,59,99
+Cape Verde,F,37,53,90
+Central African Republic,NF,4,6,10
+Chad,NF,4,14,18
+Chile,F,37,57,94
+China,NF,1,14,15
+Colombia,PF,29,35,64
+Comoros,PF,24,31,55
+Congo (Brazzaville),NF,5,22,27
+Congo (Kinshasa),NF,4,15,19
+Costa Rica,F,38,53,91
+Cote d'Ivoire,PF,20,32,52
+Croatia,F,37,50,87
+Cuba,NF,1,14,15
+Cyprus,F,38,56,94
+Czech Republic,F,38,56,94
+Denmark,F,40,57,97
+Djibouti,NF,7,19,26
+Dominica,F,38,57,95
+Dominican Republic,PF,27,41,68
+Ecuador,PF,24,33,57
+Egypt,NF,9,17,26
+El Salvador,F,34,36,70
+Equatorial Guinea,NF,1,7,8
+Eritrea,NF,1,2,3
+Estonia,F,38,56,94
+Ethiopia,NF,4,8,12
+Fiji,PF,25,34,59
+Finland,F,40,60,100
+France,F,38,52,90
+Gabon,NF,8,24,32
+"Gambia, The",NF,8,12,20
+Georgia,PF,27,37,64
+Germany,F,39,56,95
+Ghana,F,37,46,83
+Greece,F,35,49,84
+Grenada,F,38,51,89
+Guatemala,PF,23,31,54
+Guinea,PF,17,24,41
+Guinea-Bissau,PF,16,24,40
+Guyana,F,32,42,74
+Haiti,PF,15,24,39
+Honduras,PF,19,27,46
+Hungary,F,29,47,76
+Iceland,F,38,59,97
+India,F,35,42,77
+Indonesia,PF,31,34,65
+Iran,NF,7,10,17
+Iraq,NF,12,15,27
+Ireland,F,39,57,96
+Israel,F,36,44,80
+Italy,F,36,53,89
+Jamaica,F,34,41,75
+Japan,F,40,56,96
+Jordan,PF,12,25,37
+Kazakhstan,NF,5,17,22
+Kenya,PF,22,29,51
+Kiribati,F,37,55,92
+Kosovo,PF,24,28,52
+Kuwait,PF,13,23,36
+Kyrgyzstan,PF,13,24,37
+Laos,NF,1,11,12
+Latvia,F,36,51,87
+Lebanon,PF,14,30,44
+Lesotho,PF,27,37,64
+Liberia,PF,28,34,62
+Libya,NF,3,10,13
+Liechtenstein,F,33,58,91
+Lithuania,F,38,53,91
+Luxembourg,F,38,60,98
+Macedonia,PF,21,36,57
+Madagascar,PF,24,32,56
+Malawi,PF,26,37,63
+Malaysia,PF,18,26,44
+Maldives,PF,17,23,40
+Mali,PF,17,28,45
+Malta,F,39,57,96
+Marshall Islands,F,37,55,92
+Mauritania,NF,9,21,30
+Mauritius,F,37,52,89
+Mexico,PF,28,37,65
+Micronesia,F,37,56,93
+Moldova,PF,27,35,62
+Monaco,F,27,57,84
+Mongolia,F,36,49,85
+Montenegro,PF,26,43,69
+Morocco,PF,15,26,41
+Mozambique,PF,20,33,53
+Myanmar,PF,14,18,32
+Namibia,F,30,47,77
+Nauru,F,35,46,81
+Nepal,PF,24,28,52
+Netherlands,F,40,59,99
+New Zealand,F,40,58,98
+Nicaragua,PF,14,33,47
+Niger,PF,21,28,49
+Nigeria,PF,25,25,50
+North Korea,NF,0,3,3
+Norway,F,40,60,100
+Oman,NF,8,17,25
+Pakistan,PF,21,22,43
+Palau,F,37,55,92
+Panama,F,35,48,83
+Papua New Guinea,PF,26,38,64
+Paraguay,PF,27,37,64
+Peru,F,31,41,72
+Philippines,PF,27,36,63
+Poland,F,37,52,89
+Portugal,F,39,58,97
+Qatar,NF,9,17,26
+Romania,F,35,49,84
+Russia,NF,5,15,20
+Rwanda,NF,8,16,24
+Saint Kitts and Nevis,F,36,53,89
+Saint Lucia,F,39,53,92
+Saint Vincent and the Grenadines,F,37,54,91
+Samoa,F,30,50,80
+San Marino,F,38,59,97
+Sao Tome and Principe,F,34,47,81
+Saudi Arabia,NF,3,7,10
+Senegal,F,32,46,78
+Serbia,F,29,47,76
+Seychelles,PF,28,43,71
+Sierra Leone,PF,28,38,66
+Singapore,PF,19,32,51
+Slovakia,F,36,53,89
+Slovenia,F,39,53,92
+Solomon Islands,F,27,44,71
+Somalia,NF,0,5,5
+South Africa,F,33,45,78
+South Korea,F,32,50,82
+South Sudan,NF,-2,6,4
+Spain,F,38,56,94
+Sri Lanka,PF,24,32,56
+Sudan,NF,2,4,6
+Suriname,F,34,43,77
+Swaziland,NF,1,17,18
+Sweden,F,40,60,100
+Switzerland,F,39,57,96
+Syria,NF,-3,2,-1
+Taiwan,F,37,54,91
+Tajikistan,NF,1,10,11
+Tanzania,PF,25,33,58
+Thailand,NF,7,25,32
+Timor-Leste,PF,29,36,65
+Togo,PF,18,30,48
+Tonga,F,30,44,74
+Trinidad and Tobago,F,33,48,81
+Tunisia,F,36,42,78
+Turkey,PF,18,20,38
+Turkmenistan,NF,0,4,4
+Tuvalu,F,37,57,94
+Uganda,NF,11,24,35
+Ukraine,PF,25,36,61
+United Arab Emirates,NF,7,13,20
+United Kingdom,F,40,55,95
+United States of America,F,36,53,89
+Uruguay,F,40,58,98
+Uzbekistan,NF,0,3,3
+Vanuatu,F,32,48,80
+Venezuela,NF,11,19,30
+Vietnam,NF,3,17,20
+Yemen,NF,2,12,14
+Zambia,PF,23,33,56
+Zimbabwe,PF,12,20,32
