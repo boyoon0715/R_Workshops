@@ -1,0 +1,757 @@
+---
+title: "Merge Data in R"
+author: "Boyoon Lee"
+output:
+  html_notebook:
+    number_sections: yes
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  html_document:
+    df_print: paged
+    theme: cerulean
+    toc: yes
+    toc_depth: '4'
+  pdf_document: null
+  word_document: null
+---
+
+***
+
+*Disclaimer: The content of this help sheet borrows heavily from Yaoyao Dai's help sheets as well as NYU libraries material (https://guides.nyu.edu/quant/merge) *
+
+In our research, we often need information from multiple data sets, and we need to merge those data sets into one data frame for future analysis. For example, when we replicate one of Inglehart's research question on whether regime type influence the mass support for democracy, the information we interested in are in three different data sets: the world value survey (WVS), the European Value Study(EVS), and the Freedom House Score. The WVS and EVS data each contains public opinion data of a subset of countries in the world. Combining these two would give us a larger sample of countries. The Freedom House data contains the regime types. 
+
+So to replicate Inglehart's research, we want to have a merged data frame with country names, citizens' opinion towards democracy in each country, and each country's corresponding regime type. We will practice merging data vertically and horizontally in this example.
+
+The content of this document is as follows:
+
+1. Describe ways to add rows and columns 
+
+2. Describe basic types of joining of flat data sets containing common key variables.
+
+3. Practice merging real-world data sets. We are going to use WVS, EVS, and Freedome House index to answer Inglehart's question. 
+
+
+***
+# Adding rows and columns
+One simple way to combine two datasets is to simply add the second (or third, forth, and so on) data set on to the first one. This is especially useful when you have a common variable for different id variable.  
+
+## Create (mock) data sets
+Let's first creat two (mock) data sets we are going to play with. We will name one data set "left" and the other data set "right". Both data sets will contain country names as well as freedom house scores on year 2017 and 2018, as shown below.  
+
+**(1) Data set "left"**
+
+country | freedom house score (2017)
+--------|:-------------------------:
+US      |       89
+Japan   |       96
+Germany |       95
+Russia  |       20
+
+
+**(2) Data set "right"**
+
+country |  freedom house score (2018)
+--------|:-------------------------:
+US      |       86
+China   |       14
+Germany |       94
+Ukraine |       62
+
+
+```{r, include=TRUE, results='hide'}
+# Create data sets called "left"
+
+country.left<-c("US","Japan","Germany","Russia")
+freedom.left<-c(89,96,95,20)
+left<-as.data.frame(cbind(country.left,freedom.left))
+names(left)<-c("country","fh_score_2017")
+left
+```
+
+
+```{r, include=TRUE, results='hide'}
+# Create data sets called "right"
+
+country.right<-c("US","China","Germany","Ukraine")
+freedom.right<-c(86,14,94,62)
+right<-as.data.frame(cbind(country.right,freedom.right))
+names(right)<-c("country","fh_score_2018")
+right
+```
+
+
+## Add rows and columns
+
+### Without pairing
+One very simple way to combine the two data sets is to make separate column(s) for two different freedom house scores, as the table below.   
+
+country |  freedom house score (2017) | freedom house score (2018)
+--------|:---------------------------:|:-----------------------------:
+US      |       89                  |       
+Japan   |       96                  |       
+Germany |       95                  |      
+Russia  |       20                  |
+US      |                           |         86
+China   |                           |         14
+Germany |                           |         94
+Ukraine |                           |         62
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# Ignore the error message "Unequal factor levels: coercing to character"
+library(dplyr)
+add_rows <- left %>% bind_rows(right)
+add_rows
+```
+
+### With pairing
+Since both data sets are reporting the freedom house score, yet at different years, we can think of having only one column for the freedom house score. However, we will lose information on the year corresponding to a specific freedom house score if we simply combine into one column, so we will first create a variable called "year" as shown in tables 1 and 2 below. After creating the year variable, we merge the two data sets into one (table 3 below). <span style="color:red">Note that we need to have the same names for the variables you want to merge into the same column.</span>
+
+
+**(1) Data set "left_y": add "year" variable**
+
+country | year | freedom house score
+--------|:------:|:--------------------:
+US      | 2017 |      89
+Japan   | 2017 |      96
+Germany | 2017 |      95
+Russia  | 2017 |      20
+
+**(2) Data set "right_y": add "year variable"**
+
+country | year | freedom house score
+--------|:------:|:--------------------:
+US      | 2018 |      86
+China   | 2018 |      14
+Germany | 2018 |      94
+Ukraine | 2018 |      62
+
+```{r, include=TRUE, results='hide'}
+year.2017<-c(rep(2017,4))
+left_y<-cbind(left,year.2017)
+names(left_y)<-c("country","fh_score","year")
+left_y
+```
+
+```{r, include=TRUE, results='hide'}
+year.2018<-c(rep(2018,4))
+right_y<-cbind(right,year.2018)
+names(right_y)<-c("country","fh_score","year")
+right_y
+```
+
+
+**(3) Merge into a common column for freedon house score**
+
+country |  freedom house score  | year
+--------|:-----------------------:|:----------:
+US      |       89              |  2017      
+Japan   |       96              |  2017     
+Germany |       95              |  2017     
+Russia  |       20              |  2017
+US      |       86              |  2018
+China   |       14              |  2018
+Germany |       94              |  2018
+Ukraine |       62              |  2018
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# Ignore the error message "Unequal factor levels: coercing to character"
+# library(dplyr)
+add_rows_pair1 <- left_y %>% bind_rows(right_y)
+add_rows_pair1
+
+# Or you can use the codes below as well (It gives the same result)
+add_rows_pair2<- rbind(left_y, right_y)
+add_rows_pair2
+```
+
+
+## Concatenating
+Basically "joining" columns together.
+
+```{r, include=TRUE, results='hide'}
+# library(dplyr)
+concat1 <- left %>% bind_cols(right)
+concat1
+
+# Or you can use cbind function
+concat2 <- cbind(left, right)
+concat2
+```
+
+
+
+
+***
+# Different types of joining datasets
+So far, we ignored whether there are repeating countries for both freedom house scores (2017 and 2018). For example, we did not take into account that there are two observations for the US and Germany when we added the two data sets. However, you may want to match up those countries when you merge dat sets -- here, I will introduce couple of ways to do this.
+
+In general, there are three different <span style="color:red">merge type</span> and four different <span style="color:red">join type</span>. <span style="color:red">Merge type</span> illustrates correspondence between the two data sets. If you are matching one observation in one data set to one observation in another data set, we call it **one-to-one** merge. Similarly, matching one observation in one data set to possibly many observations in another data set, we call it **one-to-many** merge. **Many-to-many** merge can be understood in a similar logic.
+
+<span style="color:red">Join type</span>, on the other hand, concerns with your master data set -- to what dataset you want to merge on. There are four types of joining data sets: inner, left, right, and full. **Inner** joining type leaves only those observations that are common to both data sets. **Left** and **right** joining type takes the left or right data set as a master data set and combine common observations from the other data set. Contrary to the inner joining type, the left and right type does not eliminate any observations from the master data set. Lastly, **full** joining type combines all observations from both data sets. Each joining type can be easily understood by Venn diagram below.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(cowplot)
+library(magick)
+
+innerplot <- ggdraw() + draw_image("C:/Users/joerh/git/R_Workshops/inner.png", scale = 0.7)
+leftplot <- ggdraw() + draw_image("C:/Users/joerh/git/R_Workshops/left.png", scale = 0.7)
+rightplot <- ggdraw() + draw_image("C:/Users/joerh/git/R_Workshops/right.png", scale = 0.7)
+fullplot <- ggdraw() + draw_image("C:/Users/joerh/git/R_Workshops/full.png", scale = 0.7)
+
+library(gridExtra)
+library(grid)
+grid.arrange(innerplot, leftplot,rightplot,fullplot, ncol=2, top = textGrob("Joining types",
+                            x = 0.4, y = 0.5,
+                            just = "left",
+                            gp = gpar(fontsize = 14)))
+```
+
+In sum, the two dimensions yield 12 different ways of merging data sets, as the table below presents (numbers in each cell is a relevant section number). I know it sounds a lot, but it will be easy to decide what types of merging data set you want once you know (1) how many variables should be matched and (2) what your master data set is.   
+
+ Merge type   | Inner | Left | Right | Full
+-----------|:-----:|:----:|:-----:|:----:
+One-to-one |   2.1.1    |    2.1.2  |   2.1.3    |  2.1.4   
+One-to-many|   2.2.1   |   2.2.2   |   2.2.3   |   2.2.4  
+Many-to-many|   2.3.1  |   2.3.2   |   2.3.3   |   2.3.4  
+
+
+
+## One-to-One
+Remember, we use one-to-one matching when we have a one to one correspondence between two data sets. 
+
+### Inner
+If we use inner joining type for our examples of **left** and **right**, what should our end product (merged data set) look like? Since we have only two countries that appear in both data sets (the US and Germany), we will end up with something like this: 
+
+country |  freedom house score (2017)  |  freedom house score (2018) 
+--------|:-----------------------:|:-----------------:
+US      |       89              | 86    
+Germany |       95              | 94       
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+inner_1to1 <- left %>% inner_join(right, by = 'country')
+inner_1to1
+
+# with merge function
+inner_1to1_merge <- merge(x = left, y = right, by = 'country')
+inner_1to1_merge
+```
+
+### Left
+If we want to take "left" as our main data set and add the variable for countries that are common to both data sets, our end result will still have every observations from the "left" data set and add common values
+
+country |  freedom house score (2017)  |  freedom house score (2018) 
+--------|:-----------------------:|:-----------------:
+US      |       89              | 86    
+Japan  |          96         |      
+Germany | 95 | 94
+Russia |  20 |
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+# Ignore error message saying "Column `country` joining factors with different levels, coercing to character vector"
+left_1to1 <- left %>% left_join(right, by = 'country')
+left_1to1
+
+# with merge function
+left_1to1_merge <- merge(x = left, y = right, by = 'country', all.x=TRUE)
+left_1to1_merge
+```
+
+
+### Right
+Similarly to left joining type, we can join to right as a master data set. So what we want is something like the following table.
+
+country |  freedom house score (2017)  |  freedom house score (2018) 
+--------|:-----------------------:|:-----------------:
+US      |       89              | 86    
+China  |                   |        14
+Germany | 95 | 94
+Ukraine |  | 62
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+# Ignore error message saying "Column `country` joining factors with different levels, coercing to character vector"
+right_1to1 <- left %>% right_join(right, by = 'country')
+right_1to1
+
+# with merge function
+right_1to1_merge <- merge(x = left, y = right, by = 'country', all.y=TRUE)
+right_1to1_merge
+```
+
+
+### Full
+Lastly, we can combine every observations using full joining type.
+
+country |  freedom house score (2017)  |  freedom house score (2018) 
+--------|:-----------------------:|:-----------------:
+US      |       89              | 86    
+Japan | 96 | 
+Germany | 95 | 94
+Russia | 20 | 
+China  |                   |        14
+Ukraine |  | 62
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+# Ignore error message saying "Column `country` joining factors with different levels, coercing to character vector"
+full_1to1 <- left %>% full_join(right, by = 'country')
+full_1to1
+
+# with merge function
+full_1to1_merge <- merge(x = left, y = right, by = 'country', all=TRUE)
+full_1to1_merge
+```
+
+
+
+## One-to-Many
+Let's say we have more observations for freedom house score in "right" data set because investigators measured the democracy score more than once in 2018 for some countries. In other words, we have (a new) "right" data set as below. 
+
+country |  freedom house score (2018)
+--------|:-------------------------:
+US      |       86
+US      |       84
+US      |       90
+China   |       14
+China   |       10
+Germany |       94
+Germany |       96
+Ukraine |       62
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+country.right.many<-c("US","US","US","China","China","Germany","Germany","Ukraine")
+freedom.right.many<-c(86,84,90,14,10,94,96,62)
+right.many<-as.data.frame(cbind(country.right.many,freedom.right.many))
+names(right.many)<-c("country","fh_score_2018")
+right.many
+```
+
+Now, we want to merge the "left" dataset that contains only one observation for each country and the new "right" dataset that contains multiple observations for each country. 
+
+### Inner
+What would the data set look like if we take only common countries appeared in both data sets? Again, we have the US and Germany in common, yet the number of observations are different; the new "right" data set (**right.many**) contains 3 US and 2 Germany, while the "left" data set contains 1 US and 1 Germany. In this case, the values of freedom house score for the "left" data set will be repeated to match the number of observation in the new "right" data set.
+
+country |  freedom house score (2017) | freedom house score (2018)
+--------|:-------------------------:|:-------------------------:
+US      |    89 |    86
+US      |    89 |    84
+US      |    89 |    90
+Germany |   95 |    94
+Germany |   95 |    96
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+inner_1toM <- left %>% inner_join(right.many, by = 'country')
+inner_1toM
+
+# with merge function
+inner_1toM_merge <- merge(x = left, y = right.many, by = 'country')
+inner_1toM_merge
+```
+
+
+### Left
+Similarly to left joining in one-to-one case, using left joing in one-to-many will base off the "left" as a master data set. In other words, we expect to see all countries in the "left" data set, and add values from common countries in the new "rignt" data set. 
+
+
+country |  freedom house score (2017) | freedom house score (2018)
+--------|:-------------------------:|:-------------------------:
+US      |    89 |    86
+US      |    89 |    84
+US      |    89 |    90
+Japan   | 96 |
+Germany |   95 |    94
+Germany |   95 |    96
+Russia | 20 | 
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+left_1toM <- left %>% left_join(right.many, by = 'country')
+left_1toM
+
+# with merge function
+left_1toM_merge <- merge(x = left, y = right.many, by = 'country', all.x=TRUE)
+left_1toM_merge
+```
+
+### Right
+Now we keep all countries in the new "right" data set.
+
+
+country |  freedom house score (2017) | freedom house score (2018)
+--------|:-------------------------:|:-------------------------:
+US      |    89 |    86
+US      |    89 |    84
+US      |    89 |    90
+China | | 14
+China | | 10
+Germany |   95 |    94
+Germany |   95 |    96
+Ukraine |  | 62
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+right_1toM <- left %>% right_join(right.many, by = 'country')
+right_1toM
+
+# with merge function
+right_1toM_merge <- merge(x = left, y = right.many, by = 'country', all.y=TRUE)
+right_1toM_merge
+```
+
+
+### Full
+
+country |  freedom house score (2017) | freedom house score (2018)
+--------|:-------------------------:|:-------------------------:
+US      |    89 |    86
+US      |    89 |    84
+US      |    89 |    90
+Japan   | 96 |
+Russia | 20 | 
+Germany |   95 |    94
+Germany |   95 |    96
+China | | 14
+China | | 10
+Ukraine |  | 62
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+full_1toM <- left %>% full_join(right.many, by = 'country')
+full_1toM
+
+# with merge function
+full_1toM_merge <- merge(x = left, y = right.many, by = 'country', all=TRUE)
+full_1toM_merge
+```
+
+
+## Many-to-Many
+Let's say we have more observations for freedom house score in the "left" data set also, because investigators measured the democracy score more than once in 2017 for some countries. In other words, we have (a new) "left" data set as below. 
+
+country |  freedom house score (2017)
+--------|:-------------------------:
+US      |       89
+US      |       80
+US      |       75
+Japan   |       96
+Japan   |       90
+Germany |       95
+Germany |       97
+Germany |       99
+Russia |       20
+Russia |       25
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+country.left.many<-c("US","US","US","Japan","Japan","Germany","Germany","Germany","Russia","Russia")
+freedom.left.many<-c(89,80,75,96,90,95,97,99,62,65)
+left.many<-as.data.frame(cbind(country.left.many,freedom.left.many))
+names(left.many)<-c("country","fh_score_2017")
+left.many
+```
+
+Now, we want to merge the new "left" dataset (**left.many**) with the new "right" dataset (**right.many**), where both data sets contain multiple observations for each country. 
+
+
+
+### Inner
+Again, we only have the US and Germany in common for both data sets. We have 3 observations for the US in both 2017 and 2018, so we will have total 9 observations for the US (3x3). For Germany, there are 2 observations in 2017 and 3 observations in 2018, so we will have 6 observation total (2x3) for Germany. 
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+inner_MtoM <- left.many %>% inner_join(right.many, by = 'country')
+inner_MtoM
+
+# with merge function
+inner_1toM_merge <- merge(x = left.many, y = right.many, by = 'country')
+inner_1toM_merge
+```
+
+
+### Left
+We have US, Japan, Germany, and Russia for the new left data set, with 3, 2, 3, and 2 observations respectively. When joining with the new right data, which has 3 US and 2 Germany observations, we will end up with 9 US (3x3), 2 Japan, 6 Germany (3x2), and 2 Russia. 
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+left_MtoM <- left.many %>% left_join(right.many, by = 'country')
+left_MtoM
+
+# with merge function
+left_MtoM_merge <- merge(x = left.many, y = right.many, by = 'country', all.x=TRUE)
+left_MtoM_merge
+```
+
+
+### Right
+You can guess how many observations for each country there will be, following the above logic presented in 2.3.1 and 2.3.2.
+
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+right_MtoM <- left.many %>% right_join(right.many, by = 'country')
+right_MtoM
+
+# with merge function
+right_MtoM_merge <- merge(x = left.many, y = right.many, by = 'country', all.y=TRUE)
+right_MtoM_merge
+```
+
+
+### Full
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# library(dplyr)
+full_MtoM <- left.many %>% full_join(right.many, by = 'country')
+full_MtoM
+
+# with merge function
+full_MtoM_merge <- merge(x = left, y = right.many, by = 'country', all=TRUE)
+full_MtoM_merge
+```
+
+
+*** 
+
+# Practice with Real-world data 
+
+## Load the data sets
+
+```{r, include=TRUE}
+WVS <- read.csv("WVS5.csv")
+EVS <- read.csv("EVS2008.csv")
+FH <- read.csv("FreedomHouse2017.csv")
+```
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# View and get familar with the date sets you will be using
+dim(WVS)
+dim(EVS)
+dim(FH)
+names(WVS)
+names(EVS)
+names(FH)
+summary(WVS)
+summary(EVS)
+summary(FH)
+```
+
+## Merge Vertically (add rows/observations)
+
+Merging data vertically means that we add more observations to the current data. In other words, we stack two data sets. In our case, we want to merge the WVS data and EVS data vertically, because this two data sets contains the same variable but with different observations (countries). We can use the function rbind() or the dplyr package to add the new data to the current turnout data (merge them vertically). <span style="color:red">You should be carefully about the variable names</span>. Also, <span style="color:red">if you are using rbind(), the names and order of the variable of the second data set should match exactly with the first one.</span>
+
+### View the names of the data sets that you want to stack
+```{r}
+names(WVS)
+```
+
+```{r}
+names(EVS)
+```
+
+We can see that EVS contains one extra variable: "Country_Abrv". The order of the rest variables are the same but with slightly different names. We need to fix these two problems in the next step.
+
+### Clean the data set before adding
+
+1. **Fix any variable names that do not match**
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+#delete the first collum of EVS, the extra variable that we are not gonna use
+EVS <- EVS[,-1]
+#change variable names in WVS to match EVS
+names(WVS)<-names(EVS)
+#before you merge, exam the two datasets again to make sure that they have the same variables and variable names 
+names(WVS)
+names(EVS)
+#you can also use set operation to check are there any variable names of WVS that is not in the names of EVS, vice versa:
+setdiff(names(WVS),names(EVS))
+```
+
+2. **Check whether there are overlapping observations**
+
+```{r, include=TRUE}
+#Intersection returns the observations appeared in both variables
+intersect(WVS$Country,EVS$Country)
+```
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+#Alternatively you can also use is.element function, which is also a set operation. It returns logic values showing whether the observation in X variable also appears in the Y variable
+is.element(WVS$Country,EVS$Country)
+```
+
+There are 20 observations appeared in both data set. We need to delete the extra entries (in one of the data set):
+```{r, include=TRUE}
+WVS.unique <- WVS[-which(is.element(WVS$Country,EVS$Country)),]
+# Double check 
+dim(WVS.unique) # We should have deleted 20 observations and kept all the variables. The correct observations should be 56-20 = 36.
+```
+
+3. **Check whether the variables are on the same scale**
+
+In fact if you check closely in the beginning of this document when we load and summarize the data, you should already notice that the variables are not on the same scale: EVS is the percentage. 
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+summary(WVS.unique)
+summary(EVS)
+```
+
+4. **Convert one of the data to be on the same scale**
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+WVS.unique[,c(2:9)] <- WVS.unique[,c(2:9)]*100
+#check again
+summary(WVS.unique)
+```
+
+
+###  Stack WVS and EVS, create a new dataframe
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+# With dplyr package
+# Ignore the error message saying "unequal factor levels"
+# library(dplyr)
+PublicOpinion <- WVS.unique %>% bind_rows(EVS)
+
+# Using rbind()
+PublicOpinion.rbind <- rbind(WVS.unique,EVS)
+
+# Double check
+dim(PublicOpinion) # 46 + 36
+summary(PublicOpinion)
+```
+
+
+
+## Merge horizontally (add columns/variables)
+
+Now we want to merge the PublicOpion data we just created with the Freedom house score. You can consider the horizontal merging as adding variables to the data, or adding additional characteristics/information about each country in this case. To merge data this way, the new data you want to merge/add to the current data must share at least one variable with the current data for r to match observations. In our example, we want to match the two data sets by country name. 
+
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+#check the variable name for country. In our example, the two data sets happen to have the same variable name of the country variable.
+names(FH)
+names(PublicOpinion)
+```
+
+```{r, include=TRUE}
+#Check how many countries each data have
+length(FH$Country)
+length(PublicOpinion$Country)
+```
+
+
+### Clean the data set before merging
+Each of the two data sets contains country names that are not in the other data set. There are two possible reasons: 1) some countries are missing in either one of them; 2) some countries are spelled differently 
+
+```{r, include=TRUE, message=FALSE, warning=FALSE}
+setdiff(PublicOpinion$Country,FH$Country)
+
+# Change those country names that are spelled differently 
+library(car)
+PublicOpinion$Country<-recode(PublicOpinion$Country,"'Argenti'='Argentina';'BurkiFaso'='Burkina Faso';'Chi'='China';'GreatBritain'='United Kingdom';'NewZealand'='New Zealand';'SouthAfrica'='South Africa';'SouthKorea'='South Korea';'TrinidadandTobago'='Trinidad and Tobago';'UnitedStates'='United States of America';'Vietm'='Vietnam'")
+
+#Check whether there are countries appeared more than once
+length(unique(PublicOpinion$Country))
+table(PublicOpinion$Country)[which(table(PublicOpinion$Country)>1)] 
+
+#Delete the extra entry
+PublicOpinion<-PublicOpinion[-which(PublicOpinion$Country=="United Kingdom")[1],]
+```
+
+
+### Merge Data
+
+**Inner **
+
+Only merge and return countries that appear in both data sets
+
+```{r, include=TRUE, message=FALSE, warning=FALSE}
+# Using dplyr package
+innerRW <- PublicOpinion %>% inner_join(FH, by = 'Country') 
+
+# Using merge()
+innerRW.merge <- merge(PublicOpinion,FH,by="Country", all = FALSE)  
+
+# Check the merged data
+dim(innerRW) # 77 obs. and 13 var.
+dim(innerRW.merge) # 77 obs. and 13 var.
+
+# Check the number of common countries
+sum(is.element(PublicOpinion$Country,FH$Country))
+```
+
+**Left**
+
+Keep all the countries in data X, the PublicOpinion data in the example. In other words, the merged data should have the same number of observations as in PublicOpinion, because we set the merge function to include all the variable in X dataframe.
+
+```{r, include=TRUE, message=FALSE, warning=FALSE}
+# Using dplyr package
+leftRW <- PublicOpinion %>% left_join(FH, by = 'Country') 
+
+# Using merge()
+leftRW.merge <- merge(PublicOpinion,FH,by="Country", all.x = TRUE)  
+
+#Check the merged data
+dim(leftRW) # 81 obs. and 13 var.
+dim(leftRW.merge) # 81 obs. and 13 var.
+```
+
+
+**Right**
+
+Keep all the countries in data Y, the Freedom House score. The merged data should have the same number of observations as in FH.
+
+```{r, include=TRUE, message=FALSE, warning=FALSE}
+# Using dplyr package
+rightRW <- PublicOpinion %>% right_join(FH, by = 'Country') 
+
+# Using merge()
+rightRW.merge <- merge(PublicOpinion,FH,by="Country", all.y = TRUE) 
+
+#Check the merged data
+dim(rightRW) # 195 obs. and 13 var.
+dim(rightRW.merge) # 195 obs. and 13 var.
+```
+
+**Full**
+
+Keep all the countries in data X and Y, the PublicOpinion data and the Freedom House score. We have 81 obs. in the Public opinion data set, 195 obs. in the FH data set, and the number of common countries the two data sets have is 77 (we ended up with 77 obs. for inner joining type). Hence, we can calculate that we well have 195+81-77=199 number of obs. if we use full joining method.
+
+```{r, include=TRUE, message=FALSE, warning=FALSE}
+# Using dplyr package
+fullRW <- PublicOpinion %>% full_join(FH, by = 'Country') 
+
+# Using merge()
+fullRW.merge <- merge(PublicOpinion,FH,by="Country", all = TRUE) 
+
+#Check the merged data
+dim(fullRW) # 199 obs. and 13 var.
+dim(fullRW.merge) # 199 obs. and 13 var.
+```
+

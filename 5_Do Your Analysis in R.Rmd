@@ -1,0 +1,704 @@
+---
+title: "Analysis in R"
+author: "Boyoon Lee"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '2'
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  html_notebook:
+    number_sections: no
+    theme: cerulean
+    toc: yes
+    toc_depth: 2
+  word_document: null
+---
+
+# Overview
+
++ Provide a guide on each step needed for your final research project
++ Provide a link to previous exercises in the class illustrating each topic/task
+
+This document shows the process you may go through for data analysis. Note that this document does *NOT* indicate that you should go through every tests suggested in this document -- rather, it gives a brief overview on how you can perform data analysis for your research. 
+
+The process may differ a little depending on what level of measurements you have for independent and dependent variables (henceforth IV and DV, respectively). Hence, the sections of this document are divided into different combinations of the levels of measurement regarding your IV and DV. In a nutshell, the following table presents some suggested analyses you can conduct.  The lists are simply there to help you decide what tests you can choose to do if you have a certain combination of one level of IV and another level of DV. 
+
+|DV level |   IV level  | Univariate Description (DV) | Bivariate Description | Hypothesis testing and Analysis|
+|-------- | ----------- | --------------------------- | --------------------- | -------------------------------|
+|**Interval** | Interval| Histogram                   |     Scatter plot      | Pearson's Correlation, Linear Regression|
+|         | Nominal/Categorical | Histogram                   | Calculate means, Plot histograms or boxplots separately based on the categorical variable | Welch's t-test (unpaired), Plot means with se, Paired t-test, Linear Regression|
+|         | Ordinal     | Histogram                   | Calculate means, Plot histogram separately based on the ordinal variable | Plot means with se, Linear Regression |
+|**Nominal (Dichotomous)$^{*}$** | Interval    |  Bar chart, Tabular display on frequency/proportion of each group | Boxplot (horizontal) or scatterplot by values of DV, Plot means with se | Welch's t-test (unpaired), Plot means with se, Paired t-test, logistic Regression
+|                          | Nominal/Categorical | Bar chart, Tabular display on frequency/proportion  of each group  | Cross-tabs for comparing proportions, Plot the cross-tab | Two sample proportion test, Chi-squared test, logistic Regression
+|                          | Ordinal     | Bar chart, Tabular display on frequency/proportion  of each group | Cross-tabs for comparing proportions, Plot the cross-tab | Chi-squared test, logistic Regression |
+|**Ordinal** | Interval | Bar chart, Tabular display on frequency/proportion  of each group | Boxplot (horizontal) or scatterplot by values of DV, Plot means with se | Either Linear or Logit Regression (see explanation) |
+|            | Nominal/Categorical | Bar chart, Tabular display on frequency/proportion  of each group | Cross-tabs for comparing proportions, Plot the cross-tab | Chi-squared test, Either Linear or Logit Regression (see explanation) |
+|            | Ordinal               |Bar chart, Tabular display on frequency/proportion  of each group | Cross-tabs for comparing proportions, Plot the cross-tab | Chi-squared test, Either Linear or Logit Regression (see explanation) |
+
+$*$ *Note: A nominal variable does not necessarily have to be a dichotomous variable because there can be more than two categories -- for example, you can classify foods into "Meats" and "Non-Meats", or into "Meat", "Vegetables", and "Grains". In this document, I only consider dichotomous nominal/categorical DV.*
+
+***
+
+Additionally, the followings are the steps you want to go through for your analysis. This document will use examples to show how each step can be dealt with.
+
+1. <span style="color:Red">Show univariate description on your dependent variable</span> : Before you conduct any further analyses, it is a good idea to see how your dependent variable is distributed because it often gives you a sense whether your research question is valid. For example, let's say your research question asks why Democrats win (more often) in the states with higher proportion of racial moninority. Perhaps what you want to do first, before trying to find out potential causes of the phenomenon, is to confirm whether Democrats actually do win in states with higher proportion of racial minority.
+2. <span style="color:Red">Show bivariate relationship</span>: After you lay out the motivation of your research question with the first step, you would want to show briefly whether there is a relationship between variables of your interest. If you have a guess on the relationship between the certain variables, showing a bivariate relationship allows you to find out whether the suggested relationship makes sense.
+3. <span style="color:Red">Specify hypothesis and conduct a simple hypothesis test</span>: While the bivariate description gives you a general intuition on whether your claim may make sense or not, through this step you test in a simple way whether the relationship between your IV and DV holds. 
+4. <span style="color:Red">Think about other independent variables and test with either Linear or Logit Regression</span>: We can use a regression to indicate how an IV is numerically related to the DV. You may want to run a regression only on you two main variables, yet it is usually the case that you would want to include a set of control variables in your regression model. If there are any additional variables that affect both the IV and DV, the observed correlation between the IV and DV may be spurious rather than indicating a true relationship between them. Thus, we "control for" potential variables that may drive the problematic spurious association between the central IV and the DV by adding the control variables into the equation. 
+5. <span style="color:Red">Present a coefficient plot and predicted probabilities (in plot and/or values) based on your regression results</span>: Once you have estimated a regression the challenge is to present and to interpret those results in a way that is easiest for you and your readers to understand. Plotting coefficient estimates and predicted values are good ways to illustrate your results.
+
+***
+
+# Preliminaries
+
+This document provides an example analysis for each combination of the level of measurement on the IV and DV using **"Counties2016.dta"** that contains county level data on the 2016 US presidential election. Before we proceed, we will load the data and recode the variable **prop_hispanic**  into nominal/categorical variable for the analysis below as follows. 
+
+```{r, warnings=FALSE, messages=FALSE}
+library(readstata13) 
+Counties <- read.dta13("Counties2016.dta")
+```
+
+
+```{r, warnings=FALSE, messages=FALSE}
+library(dplyr)
+# Counties above the median value of the proportion of Hispanic resident is coded as 1, 0 if below the median.
+Counties <- Counties %>% 
+  mutate(hispanic = ifelse(prop_hispanic > median(prop_hispanic,na.rm=T), 1, 0))
+
+# Make the hispanic variable into a factor variable. 
+Counties$hispanicF <- factor(Counties$hispanic, labels =  c("Below median", "Above median"))
+```
+
+
+The list below presents a part of the abbreviated codebook for the dataset with the level of measurements for each variable. 
+
+* **county_name**: County name.
+* **employ_pop_ratio_25_64 (Interval)**: Number of people employed in the county aged 25-45 divided by the population of those aged 25-45 in the county. Note: This variable, which is a proportion, can be greater than 1 in counties where many commute to work. 
+* **dem2p_vote_share (Interval)**: Number of votes for Clinton divided by number of votes for Clinton + number of votes for Trump in a county. 
+* **rep2p_vote_share (Interval)**: Number of votes for Trump divided by number of votes for Clinton + number of votes for Trump in a county. 
+* **TrumpMajority (Nominal-Dichotomous)**: An indicator variable for whether or not a majority of the 2-party vote in the county was given to Trump.
+    + 0 Majority to Clinton
+    + 1 Majority to Trump
+* **prop_hispanic (Interval)**: Proportion of county residents who say they are Hispanic.
+* **hispanic (Nominal-Dichotomous)**: Recoded variable that indicates whether or not a county has higher proportion of residents who say they are Hispanic than median proportion for all counties. 
+    + 0 Not exceed the median
+    + 1 Exceeds the median
+* **hispanicF (Nominal-Dichotomous)**: A factor representation of **hispanic** variable. 1 is labeld as "Above the median" and 0 as "Below median"
+* **rural_urban (Ordinal)**: Rural/Urban continuum with 1 being completely urban and 9 being completely rural.
+    + 1 Counties in metro areas of 1 million population or more
+    + 2	Counties in metro areas of 250,000 to 1 million population
+    + 3	Counties in metro areas of fewer than 250,000 population
+    + 4	Urban population of 20,000 or more, adjacent to a metro area
+    + 5	Urban population of 20,000 or more, not adjacent to a metro area
+    + 6	Urban population of 2,500 to 19,999, adjacent to a metro area
+    + 7	Urban population of 2,500 to 19,999, not adjacent to a metro area
+    + 8	Completely rural or less than 2,500 urban population, adjacent to a metro area
+    + 9	Completely rural or less than 2,500 urban population, not adjacent to a metro area.
+
+
+***
+
+
+# DV: Interval 
+
+## Univariate description (DV)
+How do we effectively see the distribution of your DV, especially for interval level variables? Tabular displays are typically not very helpful for interval level variables because there are simply too many values of the variable in the sample and so few observations with any given value that we can't learn anything useful. We would have the same problem if we used a bar plot. Instead, we can illustrate the shape of the distirbution of an interval level variable using a **histogram**.
+
+I use the Democratic share of the two party vote (**dem2p_vote_share**) for the dependent variable to illustrate the case of having an interval level variable as your dependent variable. Below is the histogram of the Democratic share of the two party vote.
+
+```{r, warnings=FALSE, messages=FALSE}
+library(ggplot2)
+ggplot(Counties, aes(x=dem2p_vote_share)) +
+  geom_histogram() +
+  labs(title="Distribution of the Democratic vote share",y="Number of counties", x="Vote share for the Democratic candidate (Clinton)")
+```
+
+
+
+## IV: Interval
+Let's say you think the proportion of county residents who say they are Hispanic (**prop_hispanic**) influences the Democratic vote share of the two party vote (**dem2p_vote_share**). We want to conduct a series of analysis to assess whether your claim is warranted by following the rest of the three steps. 
+
+
+### See bivariate relationship
+You can use a scatterplot to show the relationship between interval level variables.
+
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=prop_hispanic, y=dem2p_vote_share)) +
+  geom_point(size=2, shape=21, color="darkgrey")+
+  geom_smooth(method=lm, color="darkred", se=FALSE)+
+  labs(title=NULL ,y="Vote share for the Democratic candidate (Clinton)", x="The proportion of Hispanic residents")
+```
+
+
+
+### Specify hypothesis and Conduct a simple hypothesis testing
+Now you want to specify your hypothesis and test the simple bivariate relationship in statistical terms. Since we are interested in finding out whether there is a linear relationship between the Democratic vote share and the proportion of Hispanic residents in a country, we test the significance of the correlation coefficient ($\rho$) with **pearson's correlation coefficient test**.
+
+1. **State the null hypothesis**: $$H_0: \rho = 0$$
+The population correlation coefficient is not significantly different from zero. There is not a significant linear relationship (correlation) between x and y in the population.
+
+2. **State the alternative hypothesis**: $$H_A: \rho \ne 0$$
+The population correlation coefficient is significantly different from zero. There is a significant linear relationship (correlation) between x and y in the population.
+
+3. **Compute the test statistic**: 
+
+```{r, warnings=FALSE, messages=FALSE}
+cor.test(Counties$dem2p_vote_share, Counties$prop_hispanic, method="pearson")
+```
+
+The p-value of the test is 2.2e-16, which is less than the significance level alpha = 0.05. We can conclude that the Democratic vote share and the proportion of Hispanic residents are significantly and positively correlated with a correlation coefficient of 0.19 and p-value very close to 0.
+
+
+### Specify confounding variables and Conduct a regression analysis.
+In this example, I include the employment rate among the selected working age (25 to 64) **employ_pop_ratio_25_64** as a control variable, because I believe that the employment rate may be related to both the proportion of Hispanic in a county and the Democratic vote share -- high employment rate may draw more Hispanic people to come in to the county looking for works and it could also drive residents to vote for the Democratic party more (for example, rebounding ecomony throughout the Rust Belt may turn people against Republicans who often appeal for the reconstruction of the economy). 
+
+For conducting the regression analysis, you follow four steps.
+
+1. **Estimate a Regression**
+
+```{r, warnings=FALSE, messages=FALSE}
+reg.1<-lm(dem2p_vote_share~prop_hispanic + employ_pop_ratio_25_64, data=Counties)
+summary(reg.1)
+```
+
+2. **Interpret the Estimated Coefficients**
+
+Interpret for each coefficient estimates. See relevant class file(s) such as "SimpleRegression" and "MultipleRegressionInteractions" files.
+
+
+3. **Conduct Hypothesis Tests**
+
+This is where you assess for the statistical significance of each coefficient estimate. Keep in mind that your null hypothesis is that the coefficient is equal to zero (no effect) -- p-value < 0.05 means that you can reject the null hypothesis, meaning that you there *is* a statistically significant relationship between your IV and DV. See relevant class file(s) such as "SimpleRegression" and "MultipleRegressionInteractions" 
+
+
+4. **Assess Model Fit**
+
+After your estimation, please discuss how well your regression model (estimated values) explains the data (observed values). You can assess your current model fit with its own (adjusted) $R^2$ and residual standard error -- for example, the model above performs poorly because $R^2$ is only aboud 0.081, meaning the model only explains 8.1% of the variance of the Democratic vote share. 
+
+Another way to see the model fit is to compare with other models. For example, you can see how much adding the employment rate variable helps to explain the Democratic vote share by comparing the $R^2$ of the regression model that does not have the employment rate variable with that of the model that does have the employment rate variable. 
+
+```{r, warnings=FALSE, messages=FALSE}
+reg.1.IV<-lm(dem2p_vote_share~prop_hispanic, data=Counties)
+summary(reg.1.IV)
+```
+
+Here, we can see that the proportion of the variance in the Democratic vote share that can be explained soly by the proportion of Hispanic residents is 0.035 or 3.5%. This is only a half of the $R^2$ in the former model with the employment rate variable. This tells us that the model performs better when we include the employment variable. **An important thing to remember when you compare two models, however, is that $R^2$ should only be compared if the respective models have the same number of observations.** If you have missing observations in your variables, it often leads to different number of observations for different models. You can check how many observations are used in your regression model by nobs() function. 
+
+
+### Present regression results
+
+```{r, warnings=FALSE, messages=FALSE}
+library(sjPlot)
+plot_model(reg.1, 
+           type = "est",
+           show.values = TRUE, 
+           value.offset = .2,
+           show.intercept = FALSE,
+           title="Results: Regression Model of Democratic vote share", 
+           axis.labels = c("Employment \n rate for age 25-64", "Proportion of \n Hispanic residents"),
+           axis.title = "Coefficient Estimates") + ylim(0,0.3)
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(reg.1, 
+           type = "pred", 
+           terms = "prop_hispanic",
+           show.data = TRUE,
+           title="Predicted Proportion of Democratic Vote Share \n as a Function of the Proportion of Hispanic residents", 
+           axis.title = c("Proportion of Hispanic residents","Predicted Democratic vote share"))
+```
+
+
+## IV: Nominal (Dichotomous)
+Now, we use the nominal variable (**hispanic**) to test the same argument that a high proportion of Hispanic residents affects the Democratic vote share. 
+
+
+### See bivariate relationship
+You can (1) calculate means and/or (2) plot a histogram by the nominal variable. 
+
+```{r, warnings=FALSE, messages=FALSE}
+Mean.Dem.Table<-Counties %>%
+  filter(!is.na(hispanic)) %>%
+  group_by(hispanic)%>%
+  summarize(n=n(),avg=mean(dem2p_vote_share, na.rm=TRUE), sd=sd(dem2p_vote_share))%>%
+  mutate(se=1.96*(sd/sqrt(n)))
+Mean.Dem.Table
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties[!is.na(Counties$hispanic),], aes(x=dem2p_vote_share, fill=hispanicF)) +
+  geom_histogram()  +
+  labs(title="Democratic vote share by the proportion of Hispanic residents", 
+       x="Democratic vote share", 
+       y="Number of counties")  +
+    facet_wrap(~hispanicF) +
+  theme(legend.position = "none") # Removes legend on the right
+```
+
+
+### Specify hypothesis and Conduct a simple hypothesis testing
+
+1. **Welch's t-test**
+
+Let's test whether the average Democratic vote share were the same for counties below or above the median of Hispanic residents proportion. 
+
+```{r, warnings=FALSE, messages=FALSE}
+t.test(Counties$dem2p_vote_share~Counties$hispanic)
+```
+
+
+2. **Plot means with se**
+
+We can also plot the means with the standard errors to present the same information visually.
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Mean.Dem.Table, aes(x=factor(hispanic), y=avg, color=factor(hispanic))) +
+  geom_point(size=3,shape=19) +
+  geom_errorbar(aes(ymin=avg-se, ymax=avg+se), width=.1) +
+  labs(title="Mean Democratic vote share in counties \n  below or above median proportion of Hispanic residents",y="Democratic vote share", x="Proportion of Hispanic residents") +
+  scale_x_discrete(labels = c("0"="Below median \n of all counties", "1"="Above median \n of all counties")) +
+  scale_y_continuous(limits=c(0.25,0.4)) +
+  theme(legend.position = "none") # Removes legend on the right
+```
+
+3. **Paired t-test**
+
+Paired t-test determines whether the mean difference between two sets of observations is zero. In a paired sample t-test, each subject or entity is measured twice, resulting in pairs of observations. For example, you may have variables that measure the feelings towards Trump before and after the presidential election in 2016 for the same set of individuals. Or as in our data example, you may also be interested in testing whether the average between the Democratic and Republican vote shares in a county is the same. In this case, you can use the paired t-test. 
+
+
+```{r, warnings=FALSE, messages=FALSE}
+t.test(Counties$dem2p_vote_share, Counties$rep2p_vote_share, paired = TRUE)
+```
+
+
+**Please keep in mind that the paired t-test is useful in the case where you have repeated-measures that share the same sample. If you do not have two measures that share the same sample, consider using other types of tests.** Remember, you *don't have to* conduct all the tests listed in this section -- they are just list of possible tests you can conduct depending on what your research question is. For example, I would not conduct the paired t-test to test the argument that a high proportion of Hispanic residents affects the Democratic vote share because I am not trying to compare the means of the two variables for the same sample.      
+
+
+### Specify confounding variables and conduct a regression analysis.
+Same as I did for <span style="color:Blue">IV: Interval</span> section, I include **employ_pop_ratio_25_64** as a control variable. See above section <span style="color:Blue">IV: Interval</span> for a detailed discussion about the control variable and the steps for the regression analysis.
+
+```{r, warnings=FALSE, messages=FALSE}
+reg.2<-lm(dem2p_vote_share ~ hispanicF + employ_pop_ratio_25_64, data=Counties)
+summary(reg.2)
+```
+
+
+### Present regression results
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(reg.2, 
+           type = "est",
+           show.values = TRUE, 
+           value.offset = .2,
+           show.intercept = FALSE,
+           title="Results: Regression Model of Democratic vote share", 
+           axis.labels = c("Employment \n rate for age 25-64", "Above median of the Hispanic residents \n in all counties"),
+           axis.title = "Coefficient Estimates") + ylim(0,0.2)
+```
+
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(reg.2, 
+           type = "pred", 
+           terms = "hispanicF",
+           show.data = FALSE,
+           title="Predicted Proportion of Democratic vote share \n by the level of Hispanic residents compared to the median", 
+           axis.title = c(" ","Predicted Democratic vote share"))
+```
+
+
+## IV: Ordinal
+For an ordinal independent variable, we use **rural_urban** variable -- we suppose that we want to test whether the Democratic vote share differ by how rural a county is.
+
+### See bivariate relationship
+To describe the relationship between an interval dependent variable and an ordinal independent variable, you can do similarly as the nominal independent variable case. This means that we can (1) calculate the means and/or (2) plot a histogram seperately based on the ordinal variable. 
+
+```{r, warnings=FALSE, messages=FALSE}
+Mean.Dem.Table2<-Counties %>%
+  filter(!is.na(rural_urban)) %>%
+  group_by(rural_urban)%>%
+  summarize(n=n(),avg=mean(dem2p_vote_share, na.rm=TRUE), sd=sd(dem2p_vote_share))%>%
+  mutate(se=1.96*(sd/sqrt(n)))
+Mean.Dem.Table2
+```
+
+
+```{r}
+ggplot(Counties[!is.na(Counties$rural_urban),], aes(x=dem2p_vote_share, fill=rural_urban)) +
+  geom_histogram()  +
+  labs(title="Democratic vote share by Urban to Rural", 
+       x="Democratic vote share", 
+       y="Number of counties")  +
+    facet_wrap(~rural_urban) +
+  theme(legend.position = "none")
+```
+
+### Specify hypothesis and Conduct a simple hypothesis testing
+<span style="color:Red">The t-test is not appropriate for a comparison of more than two group means.</span> Instead, what we can do is to plot the means with se.
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Mean.Dem.Table2, aes(x=factor(rural_urban), y=avg, color=factor(rural_urban))) +
+  geom_point(size=3,shape=19) +
+  geom_errorbar(aes(ymin=avg-se, ymax=avg+se), width=.1) +
+  labs(title="Mean Democratic vote share in counties by Urban to Rural",y="Democratic vote share", x="Urban to Rural") +
+  scale_y_continuous(limits=c(0.2,0.5))+
+  scale_x_discrete(labels = c("1"="Most Urban", "9"="Most Rural"))+
+  theme(legend.position = "none")   # Removes legend on the right
+```
+
+### Specify confounding variables and Conduct a regression analysis.
+You can use a linear regression to test the relationship between the ordinal IV and the interval DV. Here, I include the **prop_hispanic** variable to control for its potential effect on both the rural(or urban) status of the county and the Democratic vote share.
+
+```{r, warnings=FALSE, messages=FALSE}
+reg.3<-lm(dem2p_vote_share ~ factor(rural_urban) + prop_hispanic, data=Counties)
+summary(reg.3)
+```
+
+### Present regression results
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(reg.3, 
+           type = "est",
+           show.values = TRUE, 
+           value.offset = .2,
+           show.intercept = FALSE,
+           title="Results: Regression Model of Democratic vote share", 
+           axis.labels = c("Proportion of the Hispanic residents","Most Rural: 9","8", "7",  "6",  "5", "4", "3","Very Urban: 2"),
+           axis.title = "Coefficient Estimates")
+```
+
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(reg.3, 
+           type = "pred", 
+           terms = "rural_urban",
+           show.data = FALSE,
+           title="Predicted Proportion of Democratic vote share \n by the level of Hispanic residents compared to the median", 
+           axis.title = c("Urban to Rural","Predicted Democratic vote share"))
+```
+
+***
+
+# DV: Nominal/Categorical (Dichotomous)
+In this section, I use **TrumpMajority** as our nominal dependent variable for the description purposes. 
+
+## Univariate description (DV)
+There are two ways to describe a nominal (dichotomous) dependent variable: (1) Tabular display or frequency of each group and (2) Bar chart.
+
+```{r, warnings=FALSE, messages=FALSE}
+Trump.Majority.Table <- Counties %>%
+  group_by(TrumpMajority)%>%
+  summarize(n=n())%>%
+  mutate(prop=round(n/sum(n),4))   # our new proportion variable, rounded
+Trump.Majority.Table
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=factor(TrumpMajority))) +
+  geom_bar(color="blue", fill="blue") +
+  labs(title="Number of US Counties that Cast a Majority of \nVotes for the Major Party Presidential Candidates", x=NULL, y="Frequency") +
+  scale_x_discrete(labels = c("0" = "Clinton","1" = "Trump")) +
+  scale_y_continuous(limits=c(0,3000))
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=factor(TrumpMajority))) +
+  geom_bar(aes(y=..prop.., group=1), color="orange", fill="orange") +
+  labs(title="Proportion of US Counties that Cast a Majority of \nVotes for the Major Party Presidential Candidates", x=NULL, y="Proportion") +
+  scale_x_discrete(labels = c("0" = "Clinton","1" = "Trump")) +
+  scale_y_continuous(limits=c(0,1))
+```
+
+
+## IV: Interval
+I use a variable regarding the proportion of Hispanic residents, **prop_hispanic**, for the illustration purpose for this section. 
+
+### See bivariate relationship
+How can we show a bivariate relationship between an intervel level IV and a nominal DV? While there could be other ways, three plots may be useful: (1) a scatterplot, (2) a boxplot, and (3) Plot means with se. 
+
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=prop_hispanic, y=factor(TrumpMajority))) +
+  geom_point(size=2, shape=21, color="darkgrey")+
+  labs(title=NULL ,y=NULL, x="The proportion of Hispanic residents") +
+  scale_y_discrete(labels = c("0" = "Clinton","1" = "Trump"))
+```
+
+The scatter plot does not convey much information. A box plot is an alternative way to visualize the distributions of an interval-level independent variable. It is particularly useful when we want to compare the distribution of several variables side-by-side. A box plot visualizes the median, the quartiles, and the IQR all together in a single object.
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=factor(TrumpMajority),y=prop_hispanic, color=factor(TrumpMajority))) + 
+  geom_boxplot() +
+  geom_jitter(shape=21, position=position_jitter(0.2)) +
+  labs(title="Proportion of Hispanic residents \n and Votes for the Major Party Presidential Candidates", x=NULL, y="Proportion of Hispanic residents") +
+  scale_x_discrete(labels = c("0" = "Clinton","1" = "Trump")) +
+  theme(legend.position = "none") + 
+  coord_flip()
+```
+
+Or we can plot means by our DV -- Trump Majority -- as we did when we had an interval level DV and a nominal level IV, to see whether there is a difference between two categories in the DV. 
+
+```{r, warnings=FALSE, messages=FALSE}
+Mean.TM.Table<-Counties %>%
+  filter(!is.na(prop_hispanic)) %>%
+  group_by(TrumpMajority)%>%
+  summarize(n=n(),avg=mean(prop_hispanic, na.rm=TRUE), sd=sd(prop_hispanic))%>%
+  mutate(se=1.96*(sd/sqrt(n)))
+Mean.TM.Table
+```
+
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Mean.TM.Table, aes(x=factor(TrumpMajority), y=avg, color=factor(TrumpMajority))) +
+  geom_point(size=3,shape=19) +
+  geom_errorbar(aes(ymin=avg-se, ymax=avg+se), width=.1) +
+  labs(title="Mean proportion of Hispanic residents in counties \n with majority vote for Clinton and Trump",y="Mean proportion of \n Hispanic residents", x=NULL) +
+  scale_x_discrete(labels = c("0"="Clinton Majority", "1"="Trump Majority")) +
+  theme(legend.position = "none") +
+  coord_flip()
+```
+
+### Specify hypothesis and Conduct a simple hypothesis test
+Similarly to the case where you have an interval level DV and a nominal level IV, you can conduct three analyses: (1) Welch's t-test, (2) plot means with se, and (3) paired t-test. See <span style="color:Blue"> IV: Nominal under DV: Interval section </span> above.
+
+
+### Specify confounding variables and Conduct a regression analysis.
+<span style="color:Red">When you have a dichotomous DV, you use a logistic regression.</span> I include **employ_pop_ratio_25_64** for the control variable. 
+
+```{r, warnings=FALSE, messages=FALSE}
+logit.1 <- glm(TrumpMajority ~  prop_hispanic + employ_pop_ratio_25_64, data = Counties, family = "binomial")
+summary(logit.1)
+```
+
+### Present regression results
+
+Plot the coefficient and show how the predicted probability changes according to your variable of interest. It is important to plot the prediction plot for logistic regression results because the relationships are nonlinear -- so we need to give the estimates from any model content and context. 
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(logit.1, 
+           type = "est",
+           show.values = TRUE, 
+           value.offset = .3,
+           show.intercept = FALSE,
+           title="Results: Logit Model of the Probability of the Trump majority vote", 
+           axis.labels = c("Employment rate among 25-64","Proportion of Hispanic residents"))
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(logit.1, 
+           type="pred",
+           terms = "prop_hispanic",
+           title="Predicted Probability of the Trump majority vote", 
+           axis.title = c("Proportion of Hispanic residents","Predicted Probability"))
+```
+
+
+## IV: Nominal (Dichotomous)
+Now, I use **hispanicF** as an IV to illustrate how to conduct an anlysis when we have a nominal/categorical (dichotomous) variable for both our DV and IV. 
+
+### See bivariate relationship
+If our hypothesis involves the relationship between two nominal variables or two ordinal variables (or one of each type) we can describe and compare the relationship between them using a cross-tabulation or cross-tab. We can also plot the information in a cross-tab using a bar plot.
+
+```{r, warnings=FALSE, messages=FALSE}
+library(descr) 
+#list dependent variable, then independent variable
+CrossTable(Counties$TrumpMajority,Counties$hispanicF,
+           prop.r=FALSE, prop.c=TRUE, prop.t=FALSE,
+           prop.chisq = FALSE)
+```
+
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties[!is.na(Counties$hispanic),], aes(x=hispanicF , fill=factor(TrumpMajority))) +
+  geom_bar(position="dodge",aes(y=..prop.., group=factor(TrumpMajority)))  +
+  labs(title="Proportion of Counties Casting a Majority of Votes \nfor Clinton and Trump based on their level of Hispanic residents", 
+       x=NULL, 
+       y="Proportion") + 
+scale_fill_discrete(name="Majority Vote \n in the County", labels=c("Clinton", "Trump")) 
+
+```
+
+### Specify hypothesis and Conduct a simple hypothesis testing
+Hypothesis tests involving nominal data involve proportions. While the appropriate statistical test will depend on which of these types of questions you wish to answer, there can be two ways to see the relationship between nominal IV and DV: (1) Two sample proportion test and (2) Chi-squared test.
+
+1. **Two sample proportion test**
+
+For the cross-tab we generated above to describe the bivariate relationship, we can ask whether the proportion of counties below or above the median proportion of Hispanic residents is the same. We need to provide a vector of the successes for each group (1398 for Below and 1224 for Above the median) as well as a vector of values denoting the total number of Below median (1556) and Above median (1555) counties.
+
+```{r, warnings=FALSE, messages=FALSE}
+prop.test(x=c(1398,1224),n=c(1556,1555))
+```
+
+2. **Chi-squared ($\chi^{2}$) test**
+
+We can also ask whether two nominal variables are independent or there is some relationship between. For this test we use $\chi^{2}$ test. We look at the version of the test statistic that does not use the continuity correction.
+
+```{r, warnings=FALSE, messages=FALSE}
+#list dependent variable, then independent variable
+CrossTable(Counties$TrumpMajority,Counties$hispanicF, prop.r=TRUE, prop.c=FALSE, prop.t=FALSE, prop.chisq = FALSE, chisq = TRUE)
+```
+
+
+### Specify confounding variables and Conduct a regression analysis.
+As I mentioned above in the IV: interval section, you use a logistic regression when you have a nominal (dichotomous) DV. Again, I include **employ_pop_ratio_25_64** as a control variable.
+
+```{r, warnings=FALSE, messages=FALSE}
+logit.2 <- glm(TrumpMajority ~  hispanicF + employ_pop_ratio_25_64, data = Counties, family = "binomial")
+summary(logit.2)
+```
+
+
+### Present regression results
+As we did wotj the interval level IV, we provide a coefficient plot and a predicted plot (or preducted values) for the logistic regression. 
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(logit.2, 
+           type = "est",
+           show.values = TRUE, 
+           value.offset = .3,
+           show.intercept = FALSE,
+           title="Results: Logit Model of the Probability of the Trump majority vote",
+           axis.labels = c("Employment rate among 25-64","Counties above the median proportion of Hispanic residents"))
+```
+
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(logit.2, 
+           type="pred",
+           terms = "hispanicF",
+           title="Predicted Probability of the Trump majority vote", 
+           axis.title = c("Proportion of Hispanic residents of a county","Predicted Probability"))
+```
+
+
+## IV: Ordinal
+I use **rural_urban** variable to illustrate a case when you have an ordinal IV and nominal (dichotomous) DV.
+
+
+### See bivariate relationship
+Similarly to the case when you have a nominal (dichotomous) variable for both your IV and DV, you can use (1) cross-tabs for comparing proportions and (2) plot the cross-tabs to see the bivariate relationship.
+
+```{r, warnings=FALSE, messages=FALSE}
+#list dependent variable, then independent variable
+CrossTable(Counties$TrumpMajority,Counties$rural_urban,
+           prop.r=FALSE, prop.c=TRUE, prop.t=FALSE,
+           prop.chisq = FALSE)
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=factor(rural_urban) , fill=factor(TrumpMajority))) +
+  geom_bar(position="dodge",aes(y=..prop.., group=factor(TrumpMajority)))  +
+  labs(title="Proportion of Counties Casting a Majority of Votes \nfor Clinton and Trump based on How Rural/Urban a County", 
+       x=NULL, 
+       y="Proportion") +
+  scale_fill_discrete(name="Majority Vote \n in the County", labels=c("Clinton", "Trump")) + 
+  scale_x_discrete(labels = c("1"="Most Urban", "9"="Most Rural"))
+```
+
+### Specify hypothesis and conduct a simple hypothesis testing
+As we did with a nominal (dichotomous) variable above, we can use a $\chi^{2}$ test when we have two variables that consist of two or more ordinal or nominal levels of independent groups. In this case, a $\chi^{2}$ test will examine the null hypothesis that the two groups tend to rank things in the same way. In other words, the test concerns with whether a county with Trump Majority vote tend to be more or less rural compared to a county with Clinton Majority vote. 
+
+```{r, warnings=FALSE, messages=FALSE}
+#list dependent variable, then independent variable
+CrossTable(Counties$TrumpMajority,Counties$rural_urban,
+           prop.r=FALSE, prop.c=TRUE, prop.t=FALSE,
+           prop.chisq = FALSE, chisq = TRUE)
+```
+
+
+### Specify confounding variables and Conduct a regression analysis.
+As discussed in the above sections, we use a logistic regression when we have a nominal (dichotomous) level DV. I include the proportion of Hispanic residents, **prop_hispanic**, as a control variable.
+
+```{r, warnings=FALSE, messages=FALSE}
+logit.3 <- glm(TrumpMajority ~  factor(rural_urban) + prop_hispanic, data = Counties, family = "binomial")
+summary(logit.3)
+```
+
+### Present regression results
+Present your results with a coefficient plot and a predicted plot (or predicted values).
+
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(logit.3, 
+           type = "est",
+           show.values = TRUE, 
+           value.offset = .2,
+           show.intercept = FALSE,
+           title="Results: Regression Model of the Trump majority vote", 
+           axis.labels = c("Proportion of the Hispanic residents","Urban to Rural 9","8", "7",  "6",  "5", "4", "3","Urban to Rural 2"))
+```
+
+ 
+```{r, warnings=FALSE, messages=FALSE}
+plot_model(logit.3, 
+           type="pred",
+           terms = "rural_urban",
+           title="Predicted Probability of the Trump majority vote \n depending on the level of Ruralness", 
+           axis.title = c("Urban to Rural","Predicted probability"))
+```
+
+
+
+***
+
+# DV: Ordinal
+In this section, I use **rural_urban** variable as a dependent variable to illustrate an appropriate analysis. 
+
+## Univariate description (DV)
+In the same manner as above where we described a nominal dependent variable, there are two ways to describe an ordinal dependent variable: (1) Tabular display on frequency of each group and (2) Bar chart.
+
+```{r, warnings=FALSE, messages=FALSE}
+Rural.Urban.Table <- Counties %>%
+  group_by(rural_urban)%>%
+  summarize(n=n())%>%
+  mutate(prop=round(n/sum(n),4))   # our new proportion variable, rounded
+Rural.Urban.Table
+```
+
+```{r, warnings=FALSE, messages=FALSE}
+ggplot(Counties, aes(x=factor(rural_urban))) +
+  geom_bar(aes(y=..prop.., group=1), color="blue", fill="blue") +
+  labs(title="USDA Urban/Rural Status of US Counties in 2016", x=NULL, y="Proportion") +
+  scale_x_discrete(labels = c("1 Million","250,000 to 1 million","< 250,000", "20k+ near metro area", "20k+ not near  metro area", "2,500-19,999 near metro area", "2,500-19,999 not near metro area", "< 2,500 near metro area", "< 2,500 not near metro area", "NA")) +
+ # scale_y_continuous(limits=c(0,.25)) +
+  coord_flip()
+```
+
+## Further analyses for the ordinal DV
+
+### See bivariate relationship
+For the ordinal level DV, we can follow exactly what we did for the nominal (dichotomous) level DV. 
+
+1. If we have an **interval level IV**, we plot (1) boxplot, (2) scatterplot, or (3) means with se. See <span style="color:Blue">DV: nominal (Dichotomous) with IV: Interval </span> section for more details. You can change the nominal variable to ordinal variable in the code. 
+
+2. If we have a **nominal (dichotomous) level IV**, we produce a cross-tabulation, which shows the distribution of cases (counts or proportions) across values of the DV for cases that have different values on the IV, and plot the cross-tabulation. See <span style="color:Blue">DV: nominal (Dichotomous) with IV: ordinal </span> section for a detailed example.
+
+3. If we have an **ordinal level IV**. we can produce a cross-tabulation similarly to the case when we have a nominal level IV. We can also plot the cross-tab. However, these presentations will be effective only when you don't have too many ranks in your ordinal variable -- if you have two ordinal variable with 100 and 10 ordered categories respectively, your table or plot contains too many information and thus will be not very informative to convey their relationship. 
+
+
+### Specify hypothesis and Conduct a simple hypothesis testing
+If you have generated a cross-tab, you can also calculate $\chi^{2}$ test of association by adding **chisq = TRUE** option in your cross-tab code. See <span style="color:Blue">DV: nominal (dichotomous) with IV: nominal (dichotomous) or ordinal </span> section for the example code.
+
+
+### Specify confounding variables and Conduct a regression analysis.
+<span style="color:Red">Regardless of what levels of IVs you have, you use a logistic regression when you want to treat your ordinal DV as nominal (dichotomous) whereas you use a linear regression when you treat your ordinal DV as numeric.</span> 
+
+
+1. **Treating ordinal variables as nominal**
+
+You can recode the ordinal categories into nominal (dichotomous), ignoring the ordering of the categories and treating the variable as nominal. For example, suppose you have an income level variable coded from 1 to 10 from bottom 10% to top 10%. You can ignore the rank of the income level and re-classify the variable into either low or high income, measured by whether one falls below or above the median income level.  
+
+While recoding into a nominal (dichotomous) variable causes losing information in the ordering, it might be the case that the effect of the ordering may not be all that big or all that important -- so you can be sure that you're not overstating any effects. 
+
+If you have recoded the ordinal DV into the nominal (dichotomous) one, then you can use a logistic regression as explained in <span style="color:Blue">DV: Nominal (dichotomous) </span> section. For the logistic regression results, please do include the predicted probability plot or predicted values at a meaningful setting for the logistic regression results.
+
+2. **Treating ordinal variables as numeric**
+
+The other way you can deal with the orinal variable is to treat it as numeric: ignore the fact that the ordinal variable really isn't numeric and treat the numerals that designate each category as actual numbers. You would want to do this if you think that there is a valuable information contained in the ordinal variable. <span style="color:Red"> An imporant thing to remember is that, by treating the ordinal categories as numeric values, you assume that the numerical distance between each set of subsequent categories is equal. </span> (But oftetimes this maybe very unrealistic assumption...)
+
+If you choose to treat your ordinal DV as numeric, then you can simply use a linear regression as we did for an interval level DV. Please look at the interval level DV for the example of the linear regression analysis. 
+
+
