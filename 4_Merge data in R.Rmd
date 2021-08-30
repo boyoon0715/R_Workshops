@@ -546,10 +546,13 @@ full_MtoM_merge
 
 ## Load the data sets
 
-```{r, include=TRUE, eval=FALSE}
-WVS <- read.csv("WVS5.csv")
-EVS <- read.csv("EVS2008.csv")
-FH <- read.csv("FreedomHouse2017.csv")
+```{r, include=TRUE}
+url_wvs<-'https://raw.githubusercontent.com/boyoon0715/R_Workshops/main/WVS5.csv'
+url_evs<-'https://raw.githubusercontent.com/boyoon0715/R_Workshops/main/EVS2008.csv'
+url_FH<-'https://raw.githubusercontent.com/boyoon0715/R_Workshops/main/FreedomHouse2017.csv'
+WVS <- read.csv(url(url_wvs))
+EVS <- read.csv(url(url_evs))
+FH <- read.csv(url(url_FH))
 ```
 
 ```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE, eval=FALSE}
