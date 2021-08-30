@@ -2,6 +2,10 @@
 title: "Import, View, and Manipulate Data in R"
 author: "Boyoon Lee"
 output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+    df_print: paged
   html_notebook:
     theme: cerulean
     number_sections: yes
@@ -10,10 +14,6 @@ output:
     toc_float:
       collapsed: no
       smooth_scroll: yes
-  html_document:
-    toc: yes
-    toc_depth: '2'
-    df_print: paged
 ---
 
 ***
@@ -324,9 +324,9 @@ as.factor()
 When doing analysis, we often need to recode some of the values. For example, in survey data, the gender might be coded as "female" or "male" and we want to recode it as 0 and 1. We can use the recode function from the package car.
 
 First, install and load the package Car:
-```{r, eval=FALSE}
+```{r}
 # Install the car package, you only need to instal once
-install.packages("car")
+# install.packages("car")
 
 # Load the car package
 library(car)

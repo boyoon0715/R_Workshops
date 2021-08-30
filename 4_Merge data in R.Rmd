@@ -2,6 +2,11 @@
 title: "Merge Data in R"
 author: "Boyoon Lee"
 output:
+  html_document:
+    df_print: paged
+    theme: cerulean
+    toc: yes
+    toc_depth: '4'
   html_notebook:
     number_sections: yes
     theme: cerulean
@@ -10,11 +15,6 @@ output:
     toc_float:
       collapsed: no
       smooth_scroll: yes
-  html_document:
-    df_print: paged
-    theme: cerulean
-    toc: yes
-    toc_depth: '4'
   pdf_document: null
   word_document: null
 ---
@@ -546,13 +546,13 @@ full_MtoM_merge
 
 ## Load the data sets
 
-```{r, include=TRUE}
+```{r, include=TRUE, eval=FALSE}
 WVS <- read.csv("WVS5.csv")
 EVS <- read.csv("EVS2008.csv")
 FH <- read.csv("FreedomHouse2017.csv")
 ```
 
-```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
+```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE, eval=FALSE}
 # View and get familar with the date sets you will be using
 dim(WVS)
 dim(EVS)
@@ -570,11 +570,11 @@ summary(FH)
 Merging data vertically means that we add more observations to the current data. In other words, we stack two data sets. In our case, we want to merge the WVS data and EVS data vertically, because this two data sets contains the same variable but with different observations (countries). We can use the function rbind() or the dplyr package to add the new data to the current turnout data (merge them vertically). <span style="color:red">You should be carefully about the variable names</span>. Also, <span style="color:red">if you are using rbind(), the names and order of the variable of the second data set should match exactly with the first one.</span>
 
 ### View the names of the data sets that you want to stack
-```{r}
+```{r, eval=FALSE}
 names(WVS)
 ```
 
-```{r}
+```{r, eval=FALSE}
 names(EVS)
 ```
 
@@ -585,11 +585,11 @@ We can see that EVS contains one extra variable: "Country_Abrv". The order of th
 1. **Fix any variable names that do not match**
 
 ```{r, include=TRUE, results='hide', message=FALSE, warning=FALSE}
-#delete the first collum of EVS, the extra variable that we are not gonna use
+#delete the first column of EVS, the extra variable that we are not gonna use
 EVS <- EVS[,-1]
 #change variable names in WVS to match EVS
 names(WVS)<-names(EVS)
-#before you merge, exam the two datasets again to make sure that they have the same variables and variable names 
+#before you merge, exam the two data sets again to make sure that they have the same variables and variable names 
 names(WVS)
 names(EVS)
 #you can also use set operation to check are there any variable names of WVS that is not in the names of EVS, vice versa:
